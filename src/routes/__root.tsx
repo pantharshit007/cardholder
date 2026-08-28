@@ -1,6 +1,12 @@
-import { HeadContent, Scripts, createRootRoute } from '@tanstack/react-router'
-import { NotFound } from '#/components/not-found'
-import { APP_NAME } from '#/constants'
+import {
+  HeadContent,
+  Outlet,
+  Scripts,
+  createRootRoute,
+} from '@tanstack/react-router'
+import { AppProviders } from '@/components/app-providers'
+import { NotFound } from '@/components/not-found'
+import { APP_NAME } from '@/constants'
 
 import appCss from '../styles.css?url'
 
@@ -30,19 +36,35 @@ export const Route = createRootRoute({
       },
     ],
   }),
-  notFoundComponent: NotFound,
+  component: RootComponent,
+  notFoundComponent: RootNotFound,
   shellComponent: RootDocument,
 })
 
+function RootComponent() {
+  return (
+    <AppProviders>
+      <Outlet />
+    </AppProviders>
+  )
+}
+
+function RootNotFound() {
+  return (
+    <AppProviders>
+      <NotFound />
+    </AppProviders>
+  )
+}
+
 function RootDocument({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <HeadContent />
       </head>
-      <body>
+      <body className="min-h-[100dvh] font-sans antialiased">
         {children}
-
         <Scripts />
       </body>
     </html>

@@ -2,14 +2,7 @@ import type { CSSProperties } from 'react'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
-
-export type VisitingCardData = {
-  name: string
-  company: string
-  phone: string
-  category: string
-  initials: string
-}
+import type { VisitingCardData } from '@/types/visiting-card'
 
 export function VisitingCard({
   card,

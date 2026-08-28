@@ -7,7 +7,8 @@ import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import type { ColorTheme } from '@/types/theme'
@@ -18,8 +19,12 @@ const THEME_OPTIONS: Array<{ value: ColorTheme; label: string }> = [
   { value: 'system', label: 'System' },
 ]
 
+function isColorTheme(value: string): value is ColorTheme {
+  return value === 'light' || value === 'dark' || value === 'system'
+}
+
 export function ThemeToggle() {
-  const { theme, setTheme } = useTheme()
+  const { theme, resolvedTheme, setTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
@@ -35,9 +40,9 @@ export function ThemeToggle() {
           size="icon"
           aria-label="Change color theme"
         >
-          {mounted && theme === 'dark' ? (
+          {mounted && resolvedTheme === 'dark' ? (
             <Moon />
-          ) : mounted && theme === 'light' ? (
+          ) : mounted && resolvedTheme === 'light' ? (
             <Sun />
           ) : (
             <Monitor />
@@ -45,14 +50,20 @@ export function ThemeToggle() {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        {THEME_OPTIONS.map((option) => (
-          <DropdownMenuItem
-            key={option.value}
-            onClick={() => setTheme(option.value)}
-          >
-            {option.label}
-          </DropdownMenuItem>
-        ))}
+        <DropdownMenuRadioGroup
+          value={mounted ? (theme ?? 'system') : undefined}
+          onValueChange={(value) => {
+            if (isColorTheme(value)) {
+              setTheme(value)
+            }
+          }}
+        >
+          {THEME_OPTIONS.map((option) => (
+            <DropdownMenuRadioItem key={option.value} value={option.value}>
+              {option.label}
+            </DropdownMenuRadioItem>
+          ))}
+        </DropdownMenuRadioGroup>
       </DropdownMenuContent>
     </DropdownMenu>
   )

@@ -37,7 +37,7 @@ export const Route = createRootRoute({
     ],
   }),
   component: RootComponent,
-  notFoundComponent: RootNotFound,
+  notFoundComponent: NotFound,
   shellComponent: RootDocument,
 })
 
@@ -45,14 +45,6 @@ function RootComponent() {
   return (
     <AppProviders>
       <Outlet />
-    </AppProviders>
-  )
-}
-
-function RootNotFound() {
-  return (
-    <AppProviders>
-      <NotFound />
     </AppProviders>
   )
 }

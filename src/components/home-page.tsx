@@ -2,9 +2,9 @@ import { FoundationDemo } from '@/components/foundation-demo'
 import { SiteHeader } from '@/components/site-header'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
-import { VisitingCard  } from '@/components/visiting-card'
-import type {VisitingCardData} from '@/components/visiting-card';
-import { APP_NAME } from '@/constants'
+import { VisitingCard } from '@/components/visiting-card'
+import { APP_NAME, LANDING_CARD_STACK } from '@/constants'
+import type { VisitingCardData } from '@/types/visiting-card'
 
 const SAMPLE_CARDS: Array<VisitingCardData> = [
   {
@@ -64,20 +64,27 @@ export function HomePage() {
             </CardContent>
           </Card>
 
-          {SAMPLE_CARDS.map((card, index) => (
-            <VisitingCard
-              key={card.phone}
-              card={card}
-              className="absolute w-[min(100%,20.5rem)] animate-rise"
-              style={{
-                top: `${index * 5.5 + 4}rem`,
-                left: index === 1 ? '8%' : index === 2 ? '0%' : '18%',
-                zIndex: index + 1,
-                transform: `rotate(${index === 1 ? -4 : index === 2 ? 3 : -1.5}deg)`,
-                animationDelay: `${(index + 2) * 90}ms`,
-              }}
-            />
-          ))}
+          {SAMPLE_CARDS.map((card, index) => {
+            const layout = LANDING_CARD_STACK[index]
+            if (!layout) {
+              return null
+            }
+
+            return (
+              <VisitingCard
+                key={card.phone}
+                card={card}
+                className="absolute w-[min(100%,20.5rem)] animate-rise"
+                style={{
+                  top: `${layout.topRem}rem`,
+                  left: `${layout.leftPercent}%`,
+                  zIndex: layout.zIndex,
+                  transform: `rotate(${layout.rotateDeg}deg)`,
+                  animationDelay: `${layout.delayMs}ms`,
+                }}
+              />
+            )
+          })}
         </section>
       </main>
     </div>

@@ -1,0 +1,50 @@
+{
+  "name": "cardholder",
+  "private": true,
+  "type": "module",
+  "imports": {
+    "#/*": "./src/*"
+  },
+  "scripts": {
+    "dev": "vite dev --port 3000",
+    "build": "vite build",
+    "start": "vite preview --port 3000",
+    "preview": "vite preview --port 3000",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "format": "prettier --write . && eslint --fix",
+    "check": "prettier --check .",
+    "generate-routes": "tsr generate",
+    "db:up": "echo 'db:up is wired in Phase 2' && exit 1",
+    "db:down": "echo 'db:down is wired in Phase 2' && exit 1",
+    "db:generate": "echo 'db:generate is wired in Phase 2' && exit 1",
+    "db:migrate": "echo 'db:migrate is wired in Phase 2' && exit 1",
+    "db:studio": "echo 'db:studio is wired in Phase 2' && exit 1"
+  },
+  "dependencies": {
+    "@t3-oss/env-core": "^0.13.10",
+    "@tanstack/react-router": "latest",
+    "@tanstack/react-start": "latest",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@tanstack/eslint-config": "latest",
+    "@tanstack/router-cli": "^1.132.0",
+    "@types/node": "^22.10.2",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "@vitejs/plugin-react": "^6.0.1",
+    "eslint": "^9.20.0",
+    "prettier": "^3.8.1",
+    "typescript": "^6.0.2",
+    "vite": "^8.0.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "lightningcss"
+    ]
+  }
+}

@@ -8,7 +8,7 @@
   "scripts": {
     "dev": "vite dev --port 3000",
     "build": "vite build",
-    "start": "vite preview --port 3000",
+    "start": "node .output/server/index.mjs",
     "preview": "vite preview --port 3000",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",

@@ -3,9 +3,9 @@ import { drizzle as drizzleNeon } from 'drizzle-orm/neon-http'
 import { drizzle as drizzlePg } from 'drizzle-orm/node-postgres'
 import { Pool } from 'pg'
 
-import type { DbDriver } from '#/constants'
-import { DB_DRIVER_DEV, DB_DRIVER_PROD } from '#/constants'
-import { env } from '#/env'
+import type { DbDriver } from '@/constants'
+import { DB_DRIVER_DEV, DB_DRIVER_PROD } from '@/constants'
+import { env } from '@/env'
 
 import * as schema from './schema'
 

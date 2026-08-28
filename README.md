@@ -2,7 +2,7 @@
 
 A personal web app to store visiting/business cards (name, phone, category, and image).
 
-This repo is built **phase by phase** from `PLAN.md`. Phase 0 is the TanStack Start scaffold.
+This repo is built **phase by phase** from `PLAN.md`. Phase 1 is the Tailwind v4 + shadcn/ui foundation.
 
 ## Tooling
 

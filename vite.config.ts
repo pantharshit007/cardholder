@@ -1,5 +1,6 @@
 import { defineConfig, loadEnv } from 'vite'
 import { tanstackStart } from '@tanstack/react-start/plugin/vite'
+import tailwindcss from '@tailwindcss/vite'
 import viteReact from '@vitejs/plugin-react'
 
 const config = defineConfig(async ({ mode }) => {
@@ -16,7 +17,7 @@ const config = defineConfig(async ({ mode }) => {
 
   return {
     resolve: { tsconfigPaths: true },
-    plugins: [tanstackStart(), viteReact()],
+    plugins: [tailwindcss(), tanstackStart(), viteReact()],
   }
 })
 

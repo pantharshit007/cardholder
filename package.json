@@ -13,7 +13,7 @@
     "format": "prettier --write . && eslint --fix",
     "check": "prettier --check .",
     "generate-routes": "tsr generate",
-    "db:up": "docker compose up -d",
+    "db:up": "docker compose up -d --wait --wait-timeout 60",
     "db:down": "docker compose down",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",

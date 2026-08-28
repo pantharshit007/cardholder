@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: cardholder-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: cardholder
+      POSTGRES_USER: cardholder
+      POSTGRES_PASSWORD: cardholder
+    ports:
+      - '5432:5432'
+    volumes:
+      - cardholder_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U cardholder -d cardholder']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  cardholder_pg_data:

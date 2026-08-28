@@ -16,6 +16,11 @@ function getRuntimeEnv(): Record<string, string | boolean | undefined> {
 
 export const env = createEnv({
   server: {
+    NODE_ENV: z
+      .enum(['development', 'production', 'test'])
+      .default('development'),
+    /** Optional override; defaults to `pg` in development and `neon` in production. */
+    DB_DRIVER: z.enum(['pg', 'neon']).optional(),
     DATABASE_URL: z.string().url(),
     BETTER_AUTH_SECRET: z.string().min(1),
     BETTER_AUTH_URL: z.string().url(),

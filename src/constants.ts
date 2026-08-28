@@ -4,6 +4,17 @@ export const DEV_SERVER_PORT = 3000
 
 export const THEME_STORAGE_KEY = 'cardholder-theme'
 
+/** Allowed Drizzle drivers. Selection lives in `src/db/index.ts` via t3-env. */
+export const DB_DRIVERS = ['pg', 'neon'] as const
+
+export type DbDriver = (typeof DB_DRIVERS)[number]
+
+/** Default for local Docker Postgres. */
+export const DB_DRIVER_DEV: DbDriver = 'pg'
+
+/** Default for Neon in production. */
+export const DB_DRIVER_PROD: DbDriver = 'neon'
+
 export const LANDING_CARD_STACK = [
   { topRem: 4, leftPercent: 18, rotateDeg: -1.5, delayMs: 180, zIndex: 1 },
   { topRem: 9.5, leftPercent: 8, rotateDeg: -4, delayMs: 270, zIndex: 2 },

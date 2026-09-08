@@ -1,11 +1,10 @@
 import { Link } from '@tanstack/react-router'
-import { SiteHeader } from '@/components/site-header'
+import { GuestShell } from '@/components/guest-shell'
 import { Button } from '@/components/ui/button'
 
 export function NotFound() {
   return (
-    <div className="flex min-h-[100dvh] flex-col">
-      <SiteHeader />
+    <GuestShell>
       <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col justify-center px-4 pb-16 md:px-8">
         <p className="font-mono text-xs tracking-[0.18em] text-primary uppercase">
           404
@@ -20,6 +19,6 @@ export function NotFound() {
           <Link to="/">Back to home</Link>
         </Button>
       </main>
-    </div>
+    </GuestShell>
   )
 }

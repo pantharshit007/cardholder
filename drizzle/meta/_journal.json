@@ -8,6 +8,13 @@
       "when": 1787915181926,
       "tag": "0000_old_khan",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1788895216329,
+      "tag": "0001_regular_edwin_jarvis",
+      "breakpoints": true
     }
   ]
 }

@@ -27,6 +27,11 @@ export const env = createEnv({
     CLOUDINARY_API_KEY: z.string().optional(),
     CLOUDINARY_API_SECRET: z.string().optional(),
     OCR_SPACE_API_KEY: z.string().default('helloworld'),
+    /** Set to `false` after creating the first account to lock registration. */
+    ALLOW_SIGNUP: z
+      .enum(['true', 'false'])
+      .default('true')
+      .transform((value) => value === 'true'),
   },
   clientPrefix: 'VITE_',
   client: {

@@ -8,15 +8,17 @@ import {
   uuid,
 } from 'drizzle-orm/pg-core'
 
-/**
- * Application tables. Better Auth tables (`user`, `session`, …) land in Phase 3.
- * `userId` is plain text for now; Phase 3 wires the FK to `user.id`.
- */
+import { user } from './auth-schema'
+
+export * from './auth-schema'
+
 export const categories = pgTable(
   'categories',
   {
     id: uuid('id').defaultRandom().primaryKey(),
-    userId: text('user_id').notNull(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
     name: text('name').notNull(),
     color: text('color'),
     createdAt: timestamp('created_at', { withTimezone: true })
@@ -37,7 +39,9 @@ export const cards = pgTable(
   'cards',
   {
     id: uuid('id').defaultRandom().primaryKey(),
-    userId: text('user_id').notNull(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
     name: text('name').notNull(),
     phone: text('phone'),
     email: text('email'),
@@ -63,13 +67,21 @@ export const cards = pgTable(
   ],
 )
 
-export const categoriesRelations = relations(categories, ({ many }) => ({
+export const categoriesRelations = relations(categories, ({ many, one }) => ({
   cards: many(cards),
+  user: one(user, {
+    fields: [categories.userId],
+    references: [user.id],
+  }),
 }))
 
 export const cardsRelations = relations(cards, ({ one }) => ({
   category: one(categories, {
     fields: [cards.categoryId],
     references: [categories.id],
+  }),
+  user: one(user, {
+    fields: [cards.userId],
+    references: [user.id],
   }),
 }))

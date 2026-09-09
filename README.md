@@ -2,7 +2,7 @@
 
 A personal web app to store visiting/business cards (name, phone, category, and image).
 
-This repo is built **phase by phase** from `PLAN.md`. Phase 2 adds Docker Postgres + Drizzle ORM.
+This repo is built **phase by phase** from `PLAN.md`. Phase 3 adds Better Auth (email + password) on Postgres.
 
 ## Tooling
 
@@ -19,7 +19,7 @@ cp .env.example .env
 # Fill in required values in .env (see PLAN.md §4)
 pnpm db:up          # start local Postgres
 pnpm db:migrate     # apply migrations
-pnpm dev
+pnpm dev            # http://localhost:3000 — unauthenticated visits redirect to /login
 ```
 
 Missing or invalid env vars fail fast when Vite starts.
@@ -45,6 +45,14 @@ pnpm db:migrate   # apply migrations in ./drizzle
 pnpm db:studio    # Drizzle Studio
 pnpm db:smoke     # select 1 + table counts
 ```
+
+## Auth
+
+Email + password via **Better Auth**. Sessions live in Postgres (`user`, `session`, `account`, `verification`).
+
+1. Sign up once at `/signup`.
+2. Set `ALLOW_SIGNUP=false` in `.env` to lock registration.
+3. Visiting `/` while logged out redirects to `/login`. Refresh keeps the session; **Sign out** clears it.
 
 ## Scripts
 

@@ -2,6 +2,17 @@ export const APP_NAME = 'CardHolder'
 
 export const DEV_SERVER_PORT = 3000
 
+export const LOGIN_PATH = '/login' as const
+export const SIGNUP_PATH = '/signup' as const
+export const DEFAULT_POST_AUTH_PATH = '/' as const
+
+export const AUTH_PASSWORD_MIN_LENGTH = 8
+export const AUTH_PASSWORD_MAX_LENGTH = 128
+export const AUTH_NAME_MAX_LENGTH = 80
+
+/** Better Auth cookie cache, in seconds. */
+export const SESSION_COOKIE_CACHE_MAX_AGE_SECONDS = 5 * 60
+
 export const THEME_STORAGE_KEY = 'cardholder-theme'
 
 /** Allowed Drizzle drivers. Selection lives in `src/db/index.ts` via t3-env. */

@@ -1,11 +1,11 @@
 /**
- * Connectivity smoke check for Phase 2.
- * Runs `select 1` and counts application tables via the shared `db` client.
+ * Connectivity smoke check.
+ * Runs `select 1` and counts application + auth tables via the shared `db` client.
  */
 import { sql } from 'drizzle-orm'
 
 import { db } from '../src/db'
-import { cards, categories } from '../src/db/schema'
+import { cards, categories, session, user } from '../src/db/schema'
 
 async function main() {
   const ping = await db.execute(sql`select 1 as ok`)
@@ -15,11 +15,19 @@ async function main() {
   const [cardCount] = await db
     .select({ count: sql<number>`count(*)::int` })
     .from(cards)
+  const [userCount] = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(user)
+  const [sessionCount] = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(session)
 
   console.log('db smoke ok:', {
     ping: ping.rows[0],
     categories: categoryCount?.count ?? 0,
     cards: cardCount?.count ?? 0,
+    users: userCount?.count ?? 0,
+    sessions: sessionCount?.count ?? 0,
   })
 }
 

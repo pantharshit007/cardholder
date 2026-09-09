@@ -78,7 +78,7 @@ export function SignupForm() {
     }
 
     await router.invalidate()
-    await navigate({ to: '/' })
+    await navigate({ to: '/', replace: true })
   }
 
   return (

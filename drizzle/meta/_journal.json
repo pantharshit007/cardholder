@@ -15,6 +15,13 @@
       "when": 1788895216329,
       "tag": "0001_regular_edwin_jarvis",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1788984802836,
+      "tag": "0002_handy_wolfpack",
+      "breakpoints": true
     }
   ]
 }

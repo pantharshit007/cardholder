@@ -1,5 +1,4 @@
 import { SampleCardStack } from '@/components/sample-card-stack'
-import { APP_NAME } from '@/constants'
 import type { PublicUser } from '@/types/auth'
 
 export function HomePage({ user }: { user: PublicUser }) {

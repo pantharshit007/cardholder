@@ -72,12 +72,7 @@ export function LoginForm({
 
     await router.invalidate()
     const next = safeRedirectPath(redirectTo)
-    if (next === '/') {
-      await navigate({ to: '/' })
-      return
-    }
-
-    window.location.assign(next)
+    await navigate({ href: next, replace: true })
   }
 
   return (

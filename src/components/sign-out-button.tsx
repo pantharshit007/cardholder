@@ -25,7 +25,7 @@ export function SignOutButton() {
     }
 
     await router.invalidate()
-    await navigate({ to: LOGIN_PATH })
+    await navigate({ to: LOGIN_PATH, replace: true })
   }
 
   return (

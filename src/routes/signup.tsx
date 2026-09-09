@@ -6,12 +6,14 @@ import { fetchAuthSettings, fetchSession } from '@/server/session'
 
 export const Route = createFileRoute('/signup')({
   beforeLoad: async () => {
-    const session = await fetchSession()
+    const [session, settings] = await Promise.all([
+      fetchSession(),
+      fetchAuthSettings(),
+    ])
     if (session?.user) {
       throw redirect({ to: DEFAULT_POST_AUTH_PATH })
     }
 
-    const settings = await fetchAuthSettings()
     if (!settings.allowSignup) {
       throw redirect({ to: LOGIN_PATH })
     }

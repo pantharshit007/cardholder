@@ -5,6 +5,8 @@ export const DEV_SERVER_PORT = 3000
 export const LOGIN_PATH = '/login' as const
 export const SIGNUP_PATH = '/signup' as const
 export const DEFAULT_POST_AUTH_PATH = '/' as const
+export const CARDS_PATH = '/' as const
+export const CARD_NEW_PATH = '/cards/new' as const
 export const CATEGORIES_PATH = '/categories' as const
 
 export const AUTH_PASSWORD_MIN_LENGTH = 8
@@ -43,6 +45,7 @@ export const FIELD_LIMITS = {
 } as const
 
 export const CATEGORY_NAME_MIN_LENGTH = 1
+export const CARD_NAME_MIN_LENGTH = 1
 
 /** Postgres unique_violation. Used to map duplicate category names. */
 export const POSTGRES_UNIQUE_VIOLATION = '23505'
@@ -78,3 +81,16 @@ export const ALLOWED_IMAGE_MIME_TYPES = [
   'image/png',
   'image/webp',
 ] as const
+
+export const CARD_THUMBNAIL_WIDTH = 400
+export const CARD_THUMBNAIL_HEIGHT = 250
+export const CARD_DETAIL_IMAGE_WIDTH = 1200
+
+export const CARD_SORT_OPTIONS = [
+  'newest',
+  'oldest',
+  'name_asc',
+  'name_desc',
+] as const
+
+export type CardSortOption = (typeof CARD_SORT_OPTIONS)[number]

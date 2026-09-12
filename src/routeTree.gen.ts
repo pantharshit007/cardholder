@@ -14,7 +14,11 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
 import { Route as AuthenticatedCategoriesRouteImport } from './routes/_authenticated/categories'
+import { Route as AuthenticatedCardsIndexRouteImport } from './routes/_authenticated/cards/index'
+import { Route as AuthenticatedCardsNewRouteImport } from './routes/_authenticated/cards/new'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
+import { Route as AuthenticatedCardsIdIndexRouteImport } from './routes/_authenticated/cards/$id/index'
+import { Route as AuthenticatedCardsIdEditRouteImport } from './routes/_authenticated/cards/$id/edit'
 
 const AuthenticatedRoute = AuthenticatedRouteImport.update({
   id: '/_authenticated',
@@ -40,25 +44,55 @@ const AuthenticatedCategoriesRoute = AuthenticatedCategoriesRouteImport.update({
   path: '/categories',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedCardsIndexRoute = AuthenticatedCardsIndexRouteImport.update({
+  id: '/cards/',
+  path: '/cards/',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedCardsNewRoute = AuthenticatedCardsNewRouteImport.update({
+  id: '/cards/new',
+  path: '/cards/new',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
   path: '/api/auth/$',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedCardsIdIndexRoute =
+  AuthenticatedCardsIdIndexRouteImport.update({
+    id: '/cards/$id/',
+    path: '/cards/$id/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedCardsIdEditRoute =
+  AuthenticatedCardsIdEditRouteImport.update({
+    id: '/cards/$id/edit',
+    path: '/cards/$id/edit',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
   '/categories': typeof AuthenticatedCategoriesRoute
+  '/cards/new': typeof AuthenticatedCardsNewRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/cards/': typeof AuthenticatedCardsIndexRoute
+  '/cards/$id/edit': typeof AuthenticatedCardsIdEditRoute
+  '/cards/$id/': typeof AuthenticatedCardsIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
   '/categories': typeof AuthenticatedCategoriesRoute
   '/': typeof AuthenticatedIndexRoute
+  '/cards/new': typeof AuthenticatedCardsNewRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/cards': typeof AuthenticatedCardsIndexRoute
+  '/cards/$id/edit': typeof AuthenticatedCardsIdEditRoute
+  '/cards/$id': typeof AuthenticatedCardsIdIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -67,13 +101,35 @@ export interface FileRoutesById {
   '/signup': typeof SignupRoute
   '/_authenticated/categories': typeof AuthenticatedCategoriesRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
+  '/_authenticated/cards/new': typeof AuthenticatedCardsNewRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/_authenticated/cards/': typeof AuthenticatedCardsIndexRoute
+  '/_authenticated/cards/$id/edit': typeof AuthenticatedCardsIdEditRoute
+  '/_authenticated/cards/$id/': typeof AuthenticatedCardsIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/signup' | '/categories' | '/api/auth/$'
+  fullPaths:
+    | '/'
+    | '/login'
+    | '/signup'
+    | '/categories'
+    | '/cards/new'
+    | '/api/auth/$'
+    | '/cards/'
+    | '/cards/$id/edit'
+    | '/cards/$id/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/login' | '/signup' | '/categories' | '/' | '/api/auth/$'
+  to:
+    | '/login'
+    | '/signup'
+    | '/categories'
+    | '/'
+    | '/cards/new'
+    | '/api/auth/$'
+    | '/cards'
+    | '/cards/$id/edit'
+    | '/cards/$id'
   id:
     | '__root__'
     | '/_authenticated'
@@ -81,7 +137,11 @@ export interface FileRouteTypes {
     | '/signup'
     | '/_authenticated/categories'
     | '/_authenticated/'
+    | '/_authenticated/cards/new'
     | '/api/auth/$'
+    | '/_authenticated/cards/'
+    | '/_authenticated/cards/$id/edit'
+    | '/_authenticated/cards/$id/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -128,6 +188,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCategoriesRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/cards/': {
+      id: '/_authenticated/cards/'
+      path: '/cards'
+      fullPath: '/cards/'
+      preLoaderRoute: typeof AuthenticatedCardsIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/cards/new': {
+      id: '/_authenticated/cards/new'
+      path: '/cards/new'
+      fullPath: '/cards/new'
+      preLoaderRoute: typeof AuthenticatedCardsNewRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/api/auth/$': {
       id: '/api/auth/$'
       path: '/api/auth/$'
@@ -135,17 +209,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAuthSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/cards/$id/': {
+      id: '/_authenticated/cards/$id/'
+      path: '/cards/$id'
+      fullPath: '/cards/$id/'
+      preLoaderRoute: typeof AuthenticatedCardsIdIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/cards/$id/edit': {
+      id: '/_authenticated/cards/$id/edit'
+      path: '/cards/$id/edit'
+      fullPath: '/cards/$id/edit'
+      preLoaderRoute: typeof AuthenticatedCardsIdEditRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
   }
 }
 
 interface AuthenticatedRouteChildren {
   AuthenticatedCategoriesRoute: typeof AuthenticatedCategoriesRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
+  AuthenticatedCardsNewRoute: typeof AuthenticatedCardsNewRoute
+  AuthenticatedCardsIndexRoute: typeof AuthenticatedCardsIndexRoute
+  AuthenticatedCardsIdEditRoute: typeof AuthenticatedCardsIdEditRoute
+  AuthenticatedCardsIdIndexRoute: typeof AuthenticatedCardsIdIndexRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedCategoriesRoute: AuthenticatedCategoriesRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
+  AuthenticatedCardsNewRoute: AuthenticatedCardsNewRoute,
+  AuthenticatedCardsIndexRoute: AuthenticatedCardsIndexRoute,
+  AuthenticatedCardsIdEditRoute: AuthenticatedCardsIdEditRoute,
+  AuthenticatedCardsIdIndexRoute: AuthenticatedCardsIdIndexRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(

@@ -1,4 +1,8 @@
+import { Link } from '@tanstack/react-router'
+
 import { SampleCardStack } from '@/components/sample-card-stack'
+import { Button } from '@/components/ui/button'
+import { CATEGORIES_PATH } from '@/constants'
 import type { PublicUser } from '@/types/auth'
 
 export function HomePage({ user }: { user: PublicUser }) {
@@ -12,10 +16,12 @@ export function HomePage({ user }: { user: PublicUser }) {
           {user.name}, the tray is waiting.
         </h1>
         <p className="mt-6 max-w-[52ch] text-base leading-relaxed text-muted-foreground">
-          This case is locked to {user.email}. When you start filing cards,
-          they will live here — name, phone, category, and a photo of the
-          original.
+          This case is locked to {user.email}. When you start filing cards, they
+          will live here — name, phone, category, and a photo of the original.
         </p>
+        <Button asChild className="mt-8 active:scale-[0.98]">
+          <Link to={CATEGORIES_PATH}>Name the drawers</Link>
+        </Button>
       </section>
       <SampleCardStack />
     </main>

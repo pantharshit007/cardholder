@@ -2,7 +2,7 @@
 
 A personal web app to store visiting/business cards (name, phone, category, and image).
 
-This repo is built **phase by phase** from `PLAN.md`. Phase 3 adds Better Auth (email + password) on Postgres.
+This repo is built **phase by phase** from `PLAN.md`. Phase 4 adds user-scoped category CRUD on top of Better Auth.
 
 ## Tooling
 
@@ -53,6 +53,15 @@ Email + password via **Better Auth**. Sessions live in Postgres (`user`, `sessio
 1. Sign up once at `/signup`.
 2. Set `ALLOW_SIGNUP=false` in `.env` to lock registration.
 3. Visiting `/` while logged out redirects to `/login`. Refresh keeps the session; **Sign out** clears it.
+
+## Categories
+
+Logged-in users manage drawers at `/categories`:
+
+- Create, rename, and delete categories (optional color).
+- Duplicate names for the same user are rejected.
+- Deleting a category leaves cards in place (`category_id` is set null by the foreign key).
+- Every query is scoped to the signed-in user.
 
 ## Scripts
 

@@ -3,7 +3,7 @@ import { Link } from '@tanstack/react-router'
 import { SignOutButton } from '@/components/sign-out-button'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import { APP_NAME } from '@/constants'
+import { APP_NAME, CATEGORIES_PATH } from '@/constants'
 import type { PublicUser } from '@/types/auth'
 import { initialsFromName } from '@/utils/auth-user'
 
@@ -16,13 +16,34 @@ export function AppShell({
 }) {
   return (
     <div className="flex min-h-[100dvh] flex-col">
-      <header className="flex items-center justify-between gap-4 px-4 py-5 md:px-8">
-        <Link
-          to="/"
-          className="font-display text-lg tracking-tight text-foreground"
-        >
-          {APP_NAME}
-        </Link>
+      <header className="flex items-center justify-between gap-2 px-4 py-5 sm:gap-4 md:px-8">
+        <div className="flex min-w-0 items-center gap-3 sm:gap-5 md:gap-8">
+          <Link
+            to="/"
+            className="font-display text-base tracking-tight text-foreground sm:text-lg"
+          >
+            {APP_NAME}
+          </Link>
+          <nav className="flex items-center gap-3 text-sm sm:gap-4">
+            <Link
+              to="/"
+              activeOptions={{ exact: true }}
+              className="transition-colors hover:text-foreground"
+              inactiveProps={{ className: 'text-muted-foreground' }}
+              activeProps={{ className: 'text-foreground' }}
+            >
+              Case
+            </Link>
+            <Link
+              to={CATEGORIES_PATH}
+              className="transition-colors hover:text-foreground"
+              inactiveProps={{ className: 'text-muted-foreground' }}
+              activeProps={{ className: 'text-foreground' }}
+            >
+              Drawers
+            </Link>
+          </nav>
+        </div>
         <div className="flex items-center gap-2 sm:gap-3">
           <div className="hidden items-center gap-2 sm:flex">
             <Avatar size="sm" className="rounded-md">

@@ -5,6 +5,7 @@ export const DEV_SERVER_PORT = 3000
 export const LOGIN_PATH = '/login' as const
 export const SIGNUP_PATH = '/signup' as const
 export const DEFAULT_POST_AUTH_PATH = '/' as const
+export const CATEGORIES_PATH = '/categories' as const
 
 export const AUTH_PASSWORD_MIN_LENGTH = 8
 export const AUTH_PASSWORD_MAX_LENGTH = 128
@@ -40,6 +41,33 @@ export const FIELD_LIMITS = {
   company: 120,
   notes: 2000,
 } as const
+
+export const CATEGORY_NAME_MIN_LENGTH = 1
+
+/** Postgres unique_violation. Used to map duplicate category names. */
+export const POSTGRES_UNIQUE_VIOLATION = '23505'
+
+export const CATEGORY_COLOR_HEXES = [
+  '#6B4F3A',
+  '#A15C38',
+  '#5F6B3A',
+  '#5C6468',
+  '#7A3E4A',
+  '#9A7B3C',
+] as const
+
+export const CATEGORY_COLORS = [
+  { hex: CATEGORY_COLOR_HEXES[0], label: 'Ink' },
+  { hex: CATEGORY_COLOR_HEXES[1], label: 'Clay' },
+  { hex: CATEGORY_COLOR_HEXES[2], label: 'Olive' },
+  { hex: CATEGORY_COLOR_HEXES[3], label: 'Slate' },
+  { hex: CATEGORY_COLOR_HEXES[4], label: 'Wine' },
+  { hex: CATEGORY_COLOR_HEXES[5], label: 'Brass' },
+] as const
+
+export const CATEGORY_ROW_STAGGER_MS = 45
+
+export const DEFAULT_CATEGORY_STRIPE = 'var(--primary)'
 
 export const PAGE_SIZE = 24
 

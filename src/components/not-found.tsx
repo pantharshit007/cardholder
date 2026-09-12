@@ -10,7 +10,7 @@ export function NotFound() {
           404
         </p>
         <h1 className="mt-4 max-w-[12ch] font-display text-5xl leading-none tracking-tight">
-          That card is not in the case.
+          That page could not be found.
         </h1>
         <p className="mt-4 max-w-[48ch] text-base leading-relaxed text-muted-foreground">
           The URL does not match a route in this app.

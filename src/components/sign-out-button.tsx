@@ -32,12 +32,15 @@ export function SignOutButton() {
     <Button
       type="button"
       variant="outline"
+      aria-label={pending ? 'Signing out' : 'Sign out'}
       onClick={() => void handleSignOut()}
       disabled={pending}
       className="active:scale-[0.98]"
     >
       <LogOut />
-      {pending ? 'Signing out' : 'Sign out'}
+      <span className="hidden sm:inline">
+        {pending ? 'Signing out' : 'Sign out'}
+      </span>
     </Button>
   )
 }

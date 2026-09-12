@@ -6,6 +6,12 @@ This document is the single source of truth for the build. It is written so an i
 
 ---
 
+DEV TEST AUTH:
+```
+email: random@gmail.com
+password: random@123
+```
+
 ## 1. Confirmed Decisions
 
 | Area | Decision |

@@ -16,6 +16,12 @@ export function CategoriesPage({
   const [addOpen, setAddOpen] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [deleting, setDeleting] = useState<CategoryListItem | null>(null)
+  const [deleteOpen, setDeleteOpen] = useState(false)
+
+  function requestDelete(category: CategoryListItem) {
+    setDeleting(category)
+    setDeleteOpen(true)
+  }
 
   return (
     <main className="mx-auto w-full max-w-7xl flex-1 px-4 pb-16 md:px-8">
@@ -51,7 +57,7 @@ export function CategoriesPage({
           editingId={editingId}
           onStartEdit={setEditingId}
           onCancelEdit={() => setEditingId(null)}
-          onRequestDelete={setDeleting}
+          onRequestDelete={requestDelete}
           onAdd={() => setAddOpen(true)}
         />
       </section>
@@ -59,7 +65,8 @@ export function CategoriesPage({
       <AddCategoryDialog open={addOpen} onOpenChange={setAddOpen} />
       <DeleteCategoryDialog
         category={deleting}
-        onClose={() => setDeleting(null)}
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
       />
     </main>
   )

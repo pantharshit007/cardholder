@@ -59,7 +59,10 @@ export function AddCategoryDialog({
     if (!parsed.success) {
       const fieldErrors = parsed.error.flatten().fieldErrors
       setNameError(fieldErrors.name?.[0])
-      setFormError(undefined)
+      setFormError(
+        fieldErrors.color?.[0] ??
+          (fieldErrors.name?.[0] ? undefined : 'Please check the form inputs.'),
+      )
       return
     }
 

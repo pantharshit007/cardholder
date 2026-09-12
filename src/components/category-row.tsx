@@ -40,7 +40,6 @@ export function CategoryRow({
   if (editing) {
     return (
       <li className="relative py-4 pl-5">
-        <ColorStripe color={category.color} />
         <CategoryEditForm category={category} onCancel={onCancelEdit} />
       </li>
     )
@@ -68,7 +67,7 @@ export function CategoryRow({
           onClick={onStartEdit}
           className="active:scale-[0.98]"
         >
-          Rename
+          Edit
         </Button>
         <Button
           type="button"
@@ -113,7 +112,11 @@ function CategoryEditForm({
     if (!parsed.success) {
       const fieldErrors = parsed.error.flatten().fieldErrors
       setNameError(fieldErrors.name?.[0])
-      setFormError(undefined)
+      setFormError(
+        fieldErrors.color?.[0] ??
+          fieldErrors.id?.[0] ??
+          (fieldErrors.name?.[0] ? undefined : 'Please check the form inputs.'),
+      )
       return
     }
 
@@ -161,6 +164,7 @@ function CategoryEditForm({
       noValidate
       className="max-w-lg"
     >
+      <ColorStripe color={color} />
       <CategoryFormFields
         nameId={nameInputId}
         name={name}

@@ -20,22 +20,22 @@ import { formatCardCount } from '@/utils/format'
 
 export function DeleteCategoryDialog({
   category,
-  onClose,
+  open,
+  onOpenChange,
 }: {
   category: CategoryListItem | null
-  onClose: () => void
+  open: boolean
+  onOpenChange: (open: boolean) => void
 }) {
   const router = useRouter()
   const deleteCategoryFn = useServerFn(deleteCategory)
   const [pending, setPending] = useState(false)
 
-  function handleOpenChange(open: boolean) {
+  function handleOpenChange(nextOpen: boolean) {
     if (pending) {
       return
     }
-    if (!open) {
-      onClose()
-    }
+    onOpenChange(nextOpen)
   }
 
   async function handleDelete() {
@@ -55,9 +55,9 @@ export function DeleteCategoryDialog({
       }
 
       await router.invalidate()
-      toast.success(`Removed ${result.data.name}.`)
+      toast.success(`Deleted ${result.data.name}.`)
       setPending(false)
-      onClose()
+      onOpenChange(false)
     } catch (error) {
       const message =
         error instanceof Error
@@ -69,7 +69,7 @@ export function DeleteCategoryDialog({
   }
 
   return (
-    <Dialog open={category !== null} onOpenChange={handleOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-md" showCloseButton={!pending}>
         <DialogHeader>
           <DialogTitle>Delete this category?</DialogTitle>
@@ -86,7 +86,7 @@ export function DeleteCategoryDialog({
             type="button"
             variant="outline"
             disabled={pending}
-            onClick={onClose}
+            onClick={() => onOpenChange(false)}
           >
             Cancel
           </Button>

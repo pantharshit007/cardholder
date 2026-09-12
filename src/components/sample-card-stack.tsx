@@ -34,7 +34,7 @@ export function SampleCardStack() {
       <Card className="absolute top-0 right-0 z-0 w-[min(100%,19rem)] rotate-2 animate-rise bg-card/80 shadow-none delay-100">
         <CardHeader>
           <CardTitle className="text-sm font-medium text-muted-foreground">
-            A card waiting in the case
+            Your next saved card
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3 pb-4">

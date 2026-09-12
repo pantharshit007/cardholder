@@ -92,7 +92,7 @@ export function AddCategoryDialog({
       onOpenChange(false)
     } catch (error) {
       const message =
-        error instanceof Error ? error.message : 'Could not add the drawer.'
+        error instanceof Error ? error.message : 'Could not add the category.'
       setFormError(message)
       toast.error(message)
       setPending(false)
@@ -108,9 +108,9 @@ export function AddCategoryDialog({
           noValidate
         >
           <DialogHeader>
-            <DialogTitle>Add a drawer</DialogTitle>
+            <DialogTitle>Add category</DialogTitle>
             <DialogDescription>
-              This label will sit on the cards you file later.
+              Use categories to group related cards.
             </DialogDescription>
           </DialogHeader>
           <CategoryFormFields
@@ -138,7 +138,7 @@ export function AddCategoryDialog({
               disabled={pending}
               className="active:scale-[0.98]"
             >
-              {pending ? 'Adding' : 'Add drawer'}
+              {pending ? 'Adding' : 'Add category'}
             </Button>
           </DialogFooter>
         </form>

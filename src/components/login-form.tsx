@@ -111,7 +111,7 @@ export function LoginForm({
           disabled={pending}
           className="w-full active:scale-[0.98] sm:w-fit"
         >
-          {pending ? 'Opening the case' : 'Open the case'}
+          {pending ? 'Signing in' : 'Sign in'}
         </Button>
       </FieldGroup>
       {allowSignup ? (
@@ -126,7 +126,7 @@ export function LoginForm({
         </p>
       ) : (
         <p className="mt-6 text-sm text-muted-foreground">
-          Signup is closed. Use the account already on this case.
+          Signup is closed. Use an existing account.
         </p>
       )}
     </form>

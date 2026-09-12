@@ -63,7 +63,7 @@ export const updateCategory = createServerFn({ method: 'POST' })
       })
 
       if (!category) {
-        return mutationFail('That drawer is not in this case.', 'not_found')
+        return mutationFail('That category could not be found.', 'not_found')
       }
 
       return mutationOk(category)
@@ -82,7 +82,7 @@ export const deleteCategory = createServerFn({ method: 'POST' })
     })
 
     if (!category) {
-      return mutationFail('That drawer is not in this case.', 'not_found')
+      return mutationFail('That category could not be found.', 'not_found')
     }
 
     return mutationOk(category)

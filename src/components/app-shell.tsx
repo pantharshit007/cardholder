@@ -17,14 +17,14 @@ export function AppShell({
   return (
     <div className="flex min-h-[100dvh] flex-col">
       <header className="flex items-center justify-between gap-2 px-4 py-5 sm:gap-4 md:px-8">
-        <div className="flex min-w-0 items-center gap-3 sm:gap-5 md:gap-8">
+        <div className="flex min-w-0 items-center gap-2 sm:gap-5 md:gap-8">
           <Link
             to="/"
-            className="font-display text-base tracking-tight text-foreground sm:text-lg"
+            className="font-display text-sm tracking-tight text-foreground sm:text-lg"
           >
             {APP_NAME}
           </Link>
-          <nav className="flex items-center gap-3 text-sm sm:gap-4">
+          <nav className="flex items-center gap-2 text-sm sm:gap-4">
             <Link
               to="/"
               activeOptions={{ exact: true }}
@@ -32,7 +32,7 @@ export function AppShell({
               inactiveProps={{ className: 'text-muted-foreground' }}
               activeProps={{ className: 'text-foreground' }}
             >
-              Case
+              Cards
             </Link>
             <Link
               to={CATEGORIES_PATH}
@@ -40,7 +40,7 @@ export function AppShell({
               inactiveProps={{ className: 'text-muted-foreground' }}
               activeProps={{ className: 'text-foreground' }}
             >
-              Drawers
+              Categories
             </Link>
           </nav>
         </div>

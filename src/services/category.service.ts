@@ -11,7 +11,7 @@ import { isUniqueViolation } from '@/utils/postgres-error'
 
 export class DuplicateCategoryError extends Error {
   constructor() {
-    super('A drawer with that name already exists.')
+    super('A category with that name already exists.')
     this.name = 'DuplicateCategoryError'
   }
 }

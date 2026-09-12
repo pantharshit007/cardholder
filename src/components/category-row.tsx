@@ -77,7 +77,7 @@ export function CategoryRow({
           onClick={onRequestDelete}
           className="active:scale-[0.98]"
         >
-          Remove
+          Delete
         </Button>
       </div>
     </li>
@@ -146,7 +146,9 @@ function CategoryEditForm({
       onCancel()
     } catch (error) {
       const message =
-        error instanceof Error ? error.message : 'Could not update the drawer.'
+        error instanceof Error
+          ? error.message
+          : 'Could not update the category.'
       setFormError(message)
       toast.error(message)
       setPending(false)

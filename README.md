@@ -56,7 +56,7 @@ Email + password via **Better Auth**. Sessions live in Postgres (`user`, `sessio
 
 ## Categories
 
-Logged-in users manage drawers at `/categories`:
+Logged-in users manage categories at `/categories`:
 
 - Create, rename, and delete categories (optional color).
 - Duplicate names for the same user are rejected.

@@ -148,11 +148,11 @@ export function SignupForm() {
           disabled={pending}
           className="w-full active:scale-[0.98] sm:w-fit"
         >
-          {pending ? 'Creating the case' : 'Create the case'}
+          {pending ? 'Creating account' : 'Create account'}
         </Button>
       </FieldGroup>
       <p className="mt-6 text-sm text-muted-foreground">
-        Already have the key?{' '}
+        Already have an account?{' '}
         <Link
           to={LOGIN_PATH}
           className="text-foreground underline-offset-4 hover:underline"

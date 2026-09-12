@@ -60,7 +60,9 @@ export function DeleteCategoryDialog({
       onClose()
     } catch (error) {
       const message =
-        error instanceof Error ? error.message : 'Could not remove the drawer.'
+        error instanceof Error
+          ? error.message
+          : 'Could not delete the category.'
       toast.error(message)
       setPending(false)
     }
@@ -70,12 +72,12 @@ export function DeleteCategoryDialog({
     <Dialog open={category !== null} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-md" showCloseButton={!pending}>
         <DialogHeader>
-          <DialogTitle>Remove this drawer?</DialogTitle>
+          <DialogTitle>Delete this category?</DialogTitle>
           <DialogDescription>
             {category
               ? category.cardCount > 0
-                ? `${category.name} currently marks ${formatCardCount(category.cardCount)}. Those cards stay in the case; they just lose this tab.`
-                : `${category.name} is empty. Removing it will not touch any cards.`
+                ? `${category.name} is assigned to ${formatCardCount(category.cardCount)}. Deleting this category will not delete those cards; they will become uncategorized.`
+                : `${category.name} has no cards. Only the category will be deleted.`
               : null}
           </DialogDescription>
         </DialogHeader>
@@ -86,7 +88,7 @@ export function DeleteCategoryDialog({
             disabled={pending}
             onClick={onClose}
           >
-            Keep it
+            Cancel
           </Button>
           <Button
             type="button"
@@ -95,7 +97,7 @@ export function DeleteCategoryDialog({
             onClick={() => void handleDelete()}
             className="active:scale-[0.98]"
           >
-            {pending ? 'Removing' : 'Remove drawer'}
+            {pending ? 'Deleting' : 'Delete category'}
           </Button>
         </DialogFooter>
       </DialogContent>

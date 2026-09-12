@@ -66,3 +66,6 @@ Keep files small and single-purpose. Split by responsibility:
 - Server functions auth + validate + user-scope.
 - No secret values in client bundle.
 - Committed with a clear, conventional message.
+
+---
+before starting the server check if whether its already running or not.

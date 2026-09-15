@@ -103,7 +103,7 @@ export function CardForm({
     }
   }
 
-  function handleDrop(e: React.DragEvent<HTMLDivElement>) {
+  function handleDrop(e: React.DragEvent<HTMLElement>) {
     e.preventDefault()
     setIsDragging(false)
     if (isBusy) return
@@ -252,7 +252,9 @@ export function CardForm({
     <form onSubmit={(e) => void handleSubmit(e)} className="space-y-8">
       {/* Image Upload Zone */}
       <div>
-        <FieldLabel className="mb-2 block font-medium">Card Image</FieldLabel>
+        <FieldLabel htmlFor="card-image-file-input" className="mb-2 block font-medium cursor-pointer">
+          Card Image
+        </FieldLabel>
         <p className="mb-3 text-xs text-muted-foreground">
           Upload a photo or scan of the business card (JPEG, PNG, WebP up to 5MB).
         </p>
@@ -295,14 +297,14 @@ export function CardForm({
             </div>
           </div>
         ) : (
-          <div
+          <label
+            htmlFor="card-image-file-input"
             onDragOver={(e) => {
               e.preventDefault()
               setIsDragging(true)
             }}
             onDragLeave={() => setIsDragging(false)}
             onDrop={handleDrop}
-            onClick={() => !isBusy && fileInputRef.current?.click()}
             className={`flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed p-8 text-center transition-all ${
               isDragging
                 ? 'border-primary bg-primary/5'
@@ -318,18 +320,20 @@ export function CardForm({
             <p className="mt-1 text-xs text-muted-foreground">
               JPEG, PNG, or WebP up to 5MB
             </p>
-          </div>
+          </label>
         )}
 
         <input
+          id="card-image-file-input"
           ref={fileInputRef}
           type="file"
           accept="image/jpeg,image/png,image/webp"
-          className="hidden"
+          className="sr-only"
           disabled={isBusy}
           onChange={(e) => {
             const file = e.target.files?.[0]
             if (file) handleFileSelect(file)
+            e.target.value = ''
           }}
         />
       </div>

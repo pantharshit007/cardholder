@@ -357,7 +357,10 @@ export function CardForm({
               placeholder="e.g. Jane Doe"
               disabled={isBusy}
               autoFocus={!isEditing}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e) => {
+                setName(e.target.value)
+                setNameError(undefined)
+              }}
               className="bg-card"
               aria-invalid={nameError ? true : undefined}
             />

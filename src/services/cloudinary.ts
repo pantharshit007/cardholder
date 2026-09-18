@@ -3,9 +3,12 @@ import {
   CARD_DETAIL_IMAGE_WIDTH,
   CARD_THUMBNAIL_HEIGHT,
   CARD_THUMBNAIL_WIDTH,
+  BYTES_PER_MEBIBYTE,
+  CLOUDINARY_API_BASE_URL,
   MAX_IMAGE_BYTES,
 } from '@/constants'
 import { env } from '@/env'
+import type { CardImageUploadResult } from '@/types/card-upload'
 
 export class ImageValidationError extends Error {
   constructor(message: string) {
@@ -21,14 +24,6 @@ export class CloudinaryUploadError extends Error {
   }
 }
 
-export interface CloudinaryUploadResult {
-  secureUrl: string
-  publicId: string
-  width?: number
-  height?: number
-  format?: string
-}
-
 export function validateImageFile(file: File): void {
   const allowedTypes = ALLOWED_IMAGE_MIME_TYPES as readonly string[]
   if (!allowedTypes.includes(file.type)) {
@@ -38,8 +33,8 @@ export function validateImageFile(file: File): void {
   }
 
   if (file.size > MAX_IMAGE_BYTES) {
-    const sizeInMb = (file.size / (1024 * 1024)).toFixed(1)
-    const limitInMb = (MAX_IMAGE_BYTES / (1024 * 1024)).toFixed(0)
+    const sizeInMb = (file.size / BYTES_PER_MEBIBYTE).toFixed(1)
+    const limitInMb = (MAX_IMAGE_BYTES / BYTES_PER_MEBIBYTE).toFixed(0)
     throw new ImageValidationError(
       `File size (${sizeInMb}MB) exceeds the maximum limit of ${limitInMb}MB.`,
     )
@@ -48,61 +43,22 @@ export function validateImageFile(file: File): void {
 
 export async function uploadImageToCloudinary(
   file: File,
-): Promise<CloudinaryUploadResult> {
+): Promise<CardImageUploadResult> {
   validateImageFile(file)
-
-  const cloudName = env.VITE_CLOUDINARY_CLOUD_NAME
-  const uploadPreset = env.VITE_CLOUDINARY_UPLOAD_PRESET
-
-  if (!cloudName || cloudName === 'placeholder') {
-    throw new CloudinaryUploadError(
-      'Cloudinary cloud name is not configured (VITE_CLOUDINARY_CLOUD_NAME).',
-    )
-  }
-
-  if (!uploadPreset || uploadPreset === 'placeholder') {
-    throw new CloudinaryUploadError(
-      'Cloudinary upload preset is not configured (VITE_CLOUDINARY_UPLOAD_PRESET).',
-    )
-  }
-
-  const endpoint = `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`
 
   const formData = new FormData()
   formData.append('file', file)
-  formData.append('upload_preset', uploadPreset)
 
-  let response: Response | null = null
-  let directUploadFailed = false
-
+  let response: Response
   try {
-    response = await fetch(endpoint, {
+    response = await fetch('/api/upload', {
       method: 'POST',
       body: formData,
     })
-  } catch {
-    directUploadFailed = true
-  }
-
-  // If direct browser-to-Cloudinary upload failed (e.g. ERR_ALPN_NEGOTIATION_FAILED, CORS, adblockers),
-  // fall back to uploading through the server endpoint.
-  if (directUploadFailed || !response) {
-    try {
-      const serverFormData = new FormData()
-      serverFormData.append('file', file)
-      response = await fetch('/api/upload', {
-        method: 'POST',
-        body: serverFormData,
-      })
-    } catch (fallbackError) {
-      const message =
-        fallbackError instanceof Error
-          ? fallbackError.message
-          : 'Network error during upload.'
-      throw new CloudinaryUploadError(
-        `Failed to connect to Cloudinary: ${message}`,
-      )
-    }
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : 'Network error during upload.'
+    throw new CloudinaryUploadError(`Failed to upload image: ${message}`)
   }
 
   if (!response.ok) {
@@ -128,21 +84,21 @@ export async function uploadImageToCloudinary(
 
   const data = (await response.json()) as {
     secure_url?: string
-    public_id?: string
+    upload_id?: string
     width?: number
     height?: number
     format?: string
   }
 
-  if (!data.secure_url || !data.public_id) {
+  if (!data.secure_url || !data.upload_id) {
     throw new CloudinaryUploadError(
-      'Cloudinary response did not include image URL or public ID.',
+      'Upload response did not include an image URL or upload reference.',
     )
   }
 
   return {
     secureUrl: data.secure_url,
-    publicId: data.public_id,
+    uploadId: data.upload_id,
     width: data.width,
     height: data.height,
     format: data.format,
@@ -228,7 +184,7 @@ export async function deleteCloudinaryImage(
     formData.append('signature', signature)
 
     const response = await fetch(
-      `https://api.cloudinary.com/v1_1/${cloudName}/image/destroy`,
+      `${CLOUDINARY_API_BASE_URL}/${cloudName}/image/destroy`,
       {
         method: 'POST',
         body: formData,
@@ -243,7 +199,7 @@ export async function deleteCloudinaryImage(
     }
 
     const result = (await response.json()) as { result?: string }
-    return result.result === 'ok'
+    return result.result === 'ok' || result.result === 'not found'
   } catch (error) {
     console.warn('Cloudinary deletion error:', error)
     return false

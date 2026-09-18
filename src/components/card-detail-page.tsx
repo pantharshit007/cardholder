@@ -21,7 +21,7 @@ import { DeleteCardDialog } from '@/components/delete-card-dialog'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { CARDS_PATH } from '@/constants'
+import { CARDS_PATH, COPY_FEEDBACK_TIMEOUT_MS } from '@/constants'
 import { getCardDetailImageUrl } from '@/services/cloudinary'
 import type { CardRecord } from '@/types/card'
 import { initialsFromName } from '@/utils/auth-user'
@@ -44,11 +44,11 @@ export function CardDetailPage({ card }: { card: CardRecord }) {
       await navigator.clipboard.writeText(text)
       if (type === 'phone') {
         setCopiedPhone(true)
-        setTimeout(() => setCopiedPhone(false), 2000)
+        setTimeout(() => setCopiedPhone(false), COPY_FEEDBACK_TIMEOUT_MS)
         toast.success('Phone number copied to clipboard.')
       } else {
         setCopiedEmail(true)
-        setTimeout(() => setCopiedEmail(false), 2000)
+        setTimeout(() => setCopiedEmail(false), COPY_FEEDBACK_TIMEOUT_MS)
         toast.success('Email copied to clipboard.')
       }
     } catch {
@@ -73,7 +73,12 @@ export function CardDetailPage({ card }: { card: CardRecord }) {
         </Link>
 
         <div className="flex items-center gap-2">
-          <Button asChild variant="outline" size="sm" className="active:scale-[0.98]">
+          <Button
+            asChild
+            variant="outline"
+            size="sm"
+            className="active:scale-[0.98]"
+          >
             <Link to="/cards/$id/edit" params={{ id: card.id }}>
               <PencilIcon className="mr-1.5 size-3.5" />
               Edit
@@ -171,7 +176,9 @@ export function CardDetailPage({ card }: { card: CardRecord }) {
                     {card.name}
                   </p>
                   {card.company ? (
-                    <p className="text-base text-muted-foreground">{card.company}</p>
+                    <p className="text-base text-muted-foreground">
+                      {card.company}
+                    </p>
                   ) : null}
                 </div>
 

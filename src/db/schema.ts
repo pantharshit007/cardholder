@@ -1,6 +1,7 @@
 import { relations } from 'drizzle-orm'
 import {
   index,
+  integer,
   pgTable,
   text,
   timestamp,
@@ -66,6 +67,40 @@ export const cards = pgTable(
     index('cards_user_id_name_idx').on(table.userId, table.name),
   ],
 )
+
+export const cardImageUploads = pgTable(
+  'card_image_uploads',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    imageUrl: text('image_url').notNull(),
+    imagePublicId: text('image_public_id').notNull().unique(),
+    claimedAt: timestamp('claimed_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => [
+    index('card_image_uploads_user_id_idx').on(table.userId),
+    index('card_image_uploads_user_id_claimed_at_idx').on(
+      table.userId,
+      table.claimedAt,
+    ),
+  ],
+)
+
+export const cloudinaryCleanupJobs = pgTable('cloudinary_cleanup_jobs', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  imagePublicId: text('image_public_id').notNull().unique(),
+  attempts: integer('attempts').default(0).notNull(),
+  lastAttemptAt: timestamp('last_attempt_at', { withTimezone: true }),
+  lastError: text('last_error'),
+  createdAt: timestamp('created_at', { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+})
 
 export const categoriesRelations = relations(categories, ({ many, one }) => ({
   cards: many(cards),

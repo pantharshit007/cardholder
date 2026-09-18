@@ -6,8 +6,8 @@ import {
   FIELD_LIMITS,
 } from '@/constants'
 
-function emptyToNull(value: unknown): string | null {
-  if (typeof value !== 'string') return null
+function emptyToNull(value: unknown): unknown {
+  if (typeof value !== 'string') return value
   const trimmed = value.trim()
   return trimmed.length > 0 ? trimmed : null
 }
@@ -16,10 +16,7 @@ export const cardNameSchema = z
   .string()
   .trim()
   .min(CARD_NAME_MIN_LENGTH, 'Enter a name.')
-  .max(
-    FIELD_LIMITS.name,
-    `Keep it under ${FIELD_LIMITS.name} characters.`,
-  )
+  .max(FIELD_LIMITS.name, `Keep it under ${FIELD_LIMITS.name} characters.`)
 
 export const cardPhoneSchema = z
   .preprocess(
@@ -75,21 +72,19 @@ export const cardNotesSchema = z
   .optional()
 
 export const cardCategoryIdSchema = z
+  .preprocess((value) => {
+    if (!value || value === 'none' || value === 'null') return null
+    return emptyToNull(value)
+  }, z.string().uuid('Invalid category ID.').nullable())
+  .optional()
+
+export const cardIdSchema = z.string().uuid('Invalid card ID.')
+
+export const cardImageUploadIdSchema = z
   .preprocess(
-    (value) => {
-      if (!value || value === 'none' || value === 'null') return null
-      return emptyToNull(value)
-    },
-    z.string().uuid('Invalid category ID.').nullable(),
+    emptyToNull,
+    z.string().uuid('Invalid image upload ID.').nullable(),
   )
-  .optional()
-
-export const cardImageUrlSchema = z
-  .preprocess(emptyToNull, z.string().nullable())
-  .optional()
-
-export const cardImagePublicIdSchema = z
-  .preprocess(emptyToNull, z.string().nullable())
   .optional()
 
 export const createCardSchema = z.object({
@@ -99,24 +94,31 @@ export const createCardSchema = z.object({
   company: cardCompanySchema,
   notes: cardNotesSchema,
   categoryId: cardCategoryIdSchema,
-  imageUrl: cardImageUrlSchema,
-  imagePublicId: cardImagePublicIdSchema,
+  imageUploadId: cardImageUploadIdSchema,
 })
 
-export const updateCardSchema = z.object({
-  id: z.string().uuid('Invalid card ID.'),
-  name: cardNameSchema,
-  phone: cardPhoneSchema,
-  email: cardEmailSchema,
-  company: cardCompanySchema,
-  notes: cardNotesSchema,
-  categoryId: cardCategoryIdSchema,
-  imageUrl: cardImageUrlSchema,
-  imagePublicId: cardImagePublicIdSchema,
-})
+export const updateCardSchema = z
+  .object({
+    id: cardIdSchema,
+    name: cardNameSchema,
+    phone: cardPhoneSchema,
+    email: cardEmailSchema,
+    company: cardCompanySchema,
+    notes: cardNotesSchema,
+    categoryId: cardCategoryIdSchema,
+    imageUploadId: cardImageUploadIdSchema,
+    removeImage: z.boolean().optional(),
+  })
+  .refine((input) => !(input.imageUploadId && input.removeImage), {
+    message: 'Cannot upload and remove an image in the same request.',
+  })
 
 export const deleteCardSchema = z.object({
-  id: z.string().uuid('Invalid card ID.'),
+  id: cardIdSchema,
+})
+
+export const discardCardUploadSchema = z.object({
+  id: z.string().uuid('Invalid image upload ID.'),
 })
 
 export const listCardsSchema = z.object({

@@ -14,17 +14,12 @@ const cryptoPolyfillScript = `
 try {
   var g = typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : this;
   if (g && !g.crypto) { g.crypto = {}; }
-  if (g && g.crypto && typeof g.crypto.randomUUID !== 'function') {
+  if (g && g.crypto && typeof g.crypto.randomUUID !== 'function' && typeof g.crypto.getRandomValues === 'function') {
     var polyfill = function() {
       return '10000000-1000-4000-8000-100000000000'.replace(/[018]/g, function(c) {
-        var rand = 0;
-        if (g.crypto && typeof g.crypto.getRandomValues === 'function') {
-          var arr = new Uint8Array(1);
-          g.crypto.getRandomValues(arr);
-          rand = arr[0];
-        } else {
-          rand = Math.floor(Math.random() * 256);
-        }
+        var arr = new Uint8Array(1);
+        g.crypto.getRandomValues(arr);
+        var rand = arr[0];
         return (+c ^ (rand & (15 >> (+c / 4)))).toString(16);
       });
     };

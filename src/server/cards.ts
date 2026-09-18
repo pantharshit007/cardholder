@@ -3,11 +3,14 @@ import { z } from 'zod'
 
 import { requireUser } from '@/lib/require-user'
 import {
+  cardIdSchema,
   createCardSchema,
   deleteCardSchema,
+  discardCardUploadSchema,
   listCardsSchema,
   updateCardSchema,
 } from '@/lib/validators/card'
+import { discardCardImageUploadForUser } from '@/services/card-upload.service'
 import {
   createCardForUser,
   deleteCardForUser,
@@ -27,7 +30,7 @@ export const listCards = createServerFn({ method: 'GET' })
   })
 
 export const getCard = createServerFn({ method: 'GET' })
-  .validator((input) => z.object({ id: z.string().uuid() }).parse(input))
+  .validator((input) => z.object({ id: cardIdSchema }).parse(input))
   .handler(async ({ data }): Promise<CardRecord | null> => {
     const user = await requireUser()
     return getCardForUser(user.id, data.id)
@@ -47,8 +50,7 @@ export const createCard = createServerFn({ method: 'POST' })
         company: data.company ?? null,
         notes: data.notes ?? null,
         categoryId: data.categoryId ?? null,
-        imageUrl: data.imageUrl ?? null,
-        imagePublicId: data.imagePublicId ?? null,
+        imageUploadId: data.imageUploadId ?? null,
       })
       return mutationOk(card)
     } catch (error) {
@@ -73,8 +75,8 @@ export const updateCard = createServerFn({ method: 'POST' })
         company: data.company ?? null,
         notes: data.notes ?? null,
         categoryId: data.categoryId ?? null,
-        imageUrl: data.imageUrl ?? null,
-        imagePublicId: data.imagePublicId ?? null,
+        imageUploadId: data.imageUploadId ?? null,
+        removeImage: data.removeImage ?? false,
       })
 
       if (!card) {
@@ -111,3 +113,25 @@ export const deleteCard = createServerFn({ method: 'POST' })
       return mutationFail(message, 'unknown')
     }
   })
+
+export const discardCardUpload = createServerFn({ method: 'POST' })
+  .validator((input) => discardCardUploadSchema.parse(input))
+  .handler(
+    async ({ data }): Promise<MutationResult<{ discarded: boolean }>> => {
+      const user = await requireUser()
+
+      try {
+        const discarded = await discardCardImageUploadForUser({
+          userId: user.id,
+          id: data.id,
+        })
+        return mutationOk({ discarded })
+      } catch (error) {
+        const message =
+          error instanceof Error
+            ? error.message
+            : 'Could not discard the image upload.'
+        return mutationFail(message, 'unknown')
+      }
+    },
+  )

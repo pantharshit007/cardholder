@@ -12,7 +12,7 @@ import {
   UserIcon,
   XIcon,
 } from 'lucide-react'
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
@@ -31,12 +31,18 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
-import { CARDS_PATH, FIELD_LIMITS } from '@/constants'
-import { createCard, updateCard } from '@/server/cards'
+import {
+  ALLOWED_IMAGE_MIME_TYPES,
+  CARDS_PATH,
+  FIELD_LIMITS,
+  MAX_IMAGE_SIZE_MEBIBYTES,
+} from '@/constants'
+import { createCard, discardCardUpload, updateCard } from '@/server/cards'
 import {
   uploadImageToCloudinary,
   validateImageFile,
 } from '@/services/cloudinary'
+import type { MutationResult } from '@/types/api'
 import type { CardRecord } from '@/types/card'
 import type { CategoryListItem } from '@/types/category'
 import { categoryStripeColor } from '@/utils/category-color'
@@ -53,6 +59,7 @@ export function CardForm({
   const router = useRouter()
   const createCardFn = useServerFn(createCard)
   const updateCardFn = useServerFn(updateCard)
+  const discardCardUploadFn = useServerFn(discardCardUpload)
 
   const isEditing = Boolean(card)
 
@@ -65,21 +72,15 @@ export function CardForm({
   )
   const [notes, setNotes] = useState(card?.notes ?? '')
 
-  // Existing image info
-  const [currentImageUrl, setCurrentImageUrl] = useState<string | null>(
-    card?.imageUrl ?? null,
-  )
-  const [currentImagePublicId, setCurrentImagePublicId] = useState<
-    string | null
-  >(card?.imagePublicId ?? null)
-
   // Newly selected file
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(
     card?.imageUrl ?? null,
   )
   const [isDragging, setIsDragging] = useState(false)
+  const [removeImage, setRemoveImage] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const previewObjectUrlRef = useRef<string | null>(null)
 
   // Status
   const [isUploading, setIsUploading] = useState(false)
@@ -90,11 +91,31 @@ export function CardForm({
 
   const isBusy = isUploading || isSaving
 
+  useEffect(
+    () => () => {
+      if (previewObjectUrlRef.current) {
+        URL.revokeObjectURL(previewObjectUrlRef.current)
+      }
+    },
+    [],
+  )
+
+  function revokePreviewObjectUrl() {
+    if (previewObjectUrlRef.current) {
+      URL.revokeObjectURL(previewObjectUrlRef.current)
+      previewObjectUrlRef.current = null
+    }
+  }
+
   function handleFileSelect(file: File) {
     try {
       validateImageFile(file)
+      revokePreviewObjectUrl()
+      const objectUrl = URL.createObjectURL(file)
+      previewObjectUrlRef.current = objectUrl
       setImageFile(file)
-      setPreviewUrl(URL.createObjectURL(file))
+      setPreviewUrl(objectUrl)
+      setRemoveImage(false)
       setFormError(undefined)
     } catch (error) {
       const message =
@@ -115,10 +136,10 @@ export function CardForm({
   }
 
   function handleRemoveImage() {
+    revokePreviewObjectUrl()
     setImageFile(null)
     setPreviewUrl(null)
-    setCurrentImageUrl(null)
-    setCurrentImagePublicId(null)
+    setRemoveImage(Boolean(card?.imageUrl))
     if (fileInputRef.current) {
       fileInputRef.current.value = ''
     }
@@ -142,16 +163,14 @@ export function CardForm({
       return
     }
 
-    let finalImageUrl = currentImageUrl
-    let finalImagePublicId = currentImagePublicId
+    let imageUploadId: string | null = null
 
     // If a new image was chosen, upload to Cloudinary
     if (imageFile) {
       setIsUploading(true)
       try {
         const uploadResult = await uploadImageToCloudinary(imageFile)
-        finalImageUrl = uploadResult.secureUrl
-        finalImagePublicId = uploadResult.publicId
+        imageUploadId = uploadResult.uploadId
       } catch (error) {
         setIsUploading(false)
         const message =
@@ -170,81 +189,83 @@ export function CardForm({
     const selectedCategoryId =
       categoryId && categoryId !== 'none' ? categoryId : null
 
+    let result: MutationResult<CardRecord>
     try {
-      if (isEditing && card) {
-        const result = await updateCardFn({
-          data: {
-            id: card.id,
-            name: trimmedName,
-            company: company.trim() || null,
-            phone: phone.trim() || null,
-            email: trimmedEmail || null,
-            notes: notes.trim() || null,
-            categoryId: selectedCategoryId,
-            imageUrl: finalImageUrl,
-            imagePublicId: finalImagePublicId,
-          },
-        })
-
-        if (!result.ok) {
-          setFormError(result.error)
-          toast.error(result.error)
-          setIsSaving(false)
-          return
-        }
-
-        toast.success(`Updated card for ${result.data.name}.`)
-        await router.invalidate()
-        setIsSaving(false)
-
-        if (onSuccess) {
-          onSuccess(result.data)
-        } else {
-          void router.navigate({
-            to: '/cards/$id',
-            params: { id: result.data.id },
-          })
-        }
-      } else {
-        const result = await createCardFn({
-          data: {
-            name: trimmedName,
-            company: company.trim() || null,
-            phone: phone.trim() || null,
-            email: trimmedEmail || null,
-            notes: notes.trim() || null,
-            categoryId: selectedCategoryId,
-            imageUrl: finalImageUrl,
-            imagePublicId: finalImagePublicId,
-          },
-        })
-
-        if (!result.ok) {
-          setFormError(result.error)
-          toast.error(result.error)
-          setIsSaving(false)
-          return
-        }
-
-        toast.success(`Created card for ${result.data.name}.`)
-        await router.invalidate()
-        setIsSaving(false)
-
-        if (onSuccess) {
-          onSuccess(result.data)
-        } else {
-          void router.navigate({
-            to: '/cards/$id',
-            params: { id: result.data.id },
-          })
-        }
-      }
+      result =
+        isEditing && card
+          ? await updateCardFn({
+              data: {
+                id: card.id,
+                name: trimmedName,
+                company: company.trim() || null,
+                phone: phone.trim() || null,
+                email: trimmedEmail || null,
+                notes: notes.trim() || null,
+                categoryId: selectedCategoryId,
+                imageUploadId,
+                removeImage,
+              },
+            })
+          : await createCardFn({
+              data: {
+                name: trimmedName,
+                company: company.trim() || null,
+                phone: phone.trim() || null,
+                email: trimmedEmail || null,
+                notes: notes.trim() || null,
+                categoryId: selectedCategoryId,
+                imageUploadId,
+              },
+            })
     } catch (error) {
+      if (imageUploadId) {
+        await discardUnusedUpload(imageUploadId)
+      }
       const message =
         error instanceof Error ? error.message : 'Could not save the card.'
       setFormError(message)
       toast.error(message)
       setIsSaving(false)
+      return
+    }
+
+    if (!result.ok) {
+      if (imageUploadId) {
+        await discardUnusedUpload(imageUploadId)
+      }
+      setFormError(result.error)
+      toast.error(result.error)
+      setIsSaving(false)
+      return
+    }
+
+    toast.success(
+      `${isEditing ? 'Updated' : 'Created'} card for ${result.data.name}.`,
+    )
+
+    try {
+      await router.invalidate()
+    } catch {
+      toast.warning('The card was saved, but the page could not be refreshed.')
+    }
+
+    setIsSaving(false)
+
+    if (onSuccess) {
+      onSuccess(result.data)
+    } else {
+      void router.navigate({
+        to: '/cards/$id',
+        params: { id: result.data.id },
+      })
+    }
+  }
+
+  async function discardUnusedUpload(imageUploadId: string) {
+    try {
+      await discardCardUploadFn({ data: { id: imageUploadId } })
+    } catch (error) {
+      console.warn('Failed to discard unused image upload:', error)
     }
   }
 
@@ -252,11 +273,15 @@ export function CardForm({
     <form onSubmit={(e) => void handleSubmit(e)} className="space-y-8">
       {/* Image Upload Zone */}
       <div>
-        <FieldLabel htmlFor="card-image-file-input" className="mb-2 block font-medium cursor-pointer">
+        <FieldLabel
+          htmlFor="card-image-file-input"
+          className="mb-2 block font-medium cursor-pointer"
+        >
           Card Image
         </FieldLabel>
         <p className="mb-3 text-xs text-muted-foreground">
-          Upload a photo or scan of the business card (JPEG, PNG, WebP up to 5MB).
+          Upload a photo or scan of the business card (JPEG, PNG, WebP up to{' '}
+          {MAX_IMAGE_SIZE_MEBIBYTES}MB).
         </p>
 
         {previewUrl ? (
@@ -318,7 +343,7 @@ export function CardForm({
               Click to select or drag and drop card image
             </p>
             <p className="mt-1 text-xs text-muted-foreground">
-              JPEG, PNG, or WebP up to 5MB
+              JPEG, PNG, or WebP up to {MAX_IMAGE_SIZE_MEBIBYTES}MB
             </p>
           </label>
         )}
@@ -327,7 +352,7 @@ export function CardForm({
           id="card-image-file-input"
           ref={fileInputRef}
           type="file"
-          accept="image/jpeg,image/png,image/webp"
+          accept={ALLOWED_IMAGE_MIME_TYPES.join(',')}
           className="sr-only"
           disabled={isBusy}
           onChange={(e) => {
@@ -342,7 +367,10 @@ export function CardForm({
       <FieldGroup>
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
           {/* Name */}
-          <Field data-invalid={nameError ? true : undefined} className="sm:col-span-2">
+          <Field
+            data-invalid={nameError ? true : undefined}
+            className="sm:col-span-2"
+          >
             <FieldLabel htmlFor="card-name">
               <span className="flex items-center gap-1.5">
                 <UserIcon className="size-3.5 text-muted-foreground" />
@@ -462,7 +490,10 @@ export function CardForm({
               maxLength={FIELD_LIMITS.email}
               placeholder="e.g. jane@example.com"
               disabled={isBusy}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => {
+                setEmail(e.target.value)
+                setEmailError(undefined)
+              }}
               className="bg-card"
               aria-invalid={emailError ? true : undefined}
             />
@@ -471,9 +502,7 @@ export function CardForm({
 
           {/* Notes */}
           <Field className="sm:col-span-2">
-            <FieldLabel htmlFor="card-notes">
-              Notes & Follow-up
-            </FieldLabel>
+            <FieldLabel htmlFor="card-notes">Notes & Follow-up</FieldLabel>
             <Textarea
               id="card-notes"
               name="notes"
@@ -493,28 +522,21 @@ export function CardForm({
 
       {/* Actions */}
       <div className="flex items-center justify-end gap-3 border-t border-foreground/10 pt-6">
-        <Button
-          asChild
-          type="button"
-          variant="outline"
-          disabled={isBusy}
-        >
-          <Link
-            to={
-              isEditing && card
-                ? '/cards/$id'
-                : CARDS_PATH
-            }
-            params={isEditing && card ? { id: card.id } : undefined}
-          >
+        {isBusy ? (
+          <Button type="button" variant="outline" disabled>
             Cancel
-          </Link>
-        </Button>
-        <Button
-          type="submit"
-          disabled={isBusy}
-          className="active:scale-[0.98]"
-        >
+          </Button>
+        ) : (
+          <Button asChild type="button" variant="outline">
+            <Link
+              to={isEditing && card ? '/cards/$id' : CARDS_PATH}
+              params={isEditing && card ? { id: card.id } : undefined}
+            >
+              Cancel
+            </Link>
+          </Button>
+        )}
+        <Button type="submit" disabled={isBusy} className="active:scale-[0.98]">
           {isUploading ? (
             <>
               <Loader2Icon className="mr-2 size-4 animate-spin" />

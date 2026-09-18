@@ -2,12 +2,18 @@ import { Link, createFileRoute, notFound } from '@tanstack/react-router'
 import { ArrowLeftIcon } from 'lucide-react'
 
 import { CardForm } from '@/components/card-form'
+import { CardFormSkeleton } from '@/components/card-form-skeleton'
 import { NotFound } from '@/components/not-found'
+import { cardIdSchema } from '@/lib/validators/card'
 import { getCard } from '@/server/cards'
 import { listCategories } from '@/server/categories'
 
 export const Route = createFileRoute('/_authenticated/cards/$id/edit')({
   loader: async ({ params }) => {
+    if (!cardIdSchema.safeParse(params.id).success) {
+      throw notFound()
+    }
+
     const [card, categories] = await Promise.all([
       getCard({ data: { id: params.id } }),
       listCategories(),
@@ -17,6 +23,7 @@ export const Route = createFileRoute('/_authenticated/cards/$id/edit')({
     }
     return { card, categories }
   },
+  pendingComponent: CardFormSkeleton,
   notFoundComponent: NotFound,
   component: EditCardRoute,
 })

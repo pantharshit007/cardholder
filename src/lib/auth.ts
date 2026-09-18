@@ -11,6 +11,7 @@ import {
 import { db } from '@/db'
 import * as schema from '@/db/schema'
 import { env } from '@/env'
+import { isSharedAddressIpv4 } from '@/utils/ip-address'
 
 function getTrustedOrigins(request?: Request): string[] {
   const origins = new Set<string>()
@@ -30,7 +31,7 @@ function getTrustedOrigins(request?: Request): string[] {
         url.hostname === 'localhost' ||
         url.hostname === '127.0.0.1' ||
         url.hostname.endsWith('.ts.net') ||
-        url.hostname.startsWith('100.') ||
+        isSharedAddressIpv4(url.hostname) ||
         url.hostname === 'my-dabba'
       ) {
         origins.add(origin)

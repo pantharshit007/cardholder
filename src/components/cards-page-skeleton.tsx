@@ -1,4 +1,5 @@
 import { Skeleton } from '@/components/ui/skeleton'
+import { CARDS_PAGE_SKELETON_COUNT } from '@/constants'
 
 export function CardsPageSkeleton() {
   return (
@@ -16,7 +17,7 @@ export function CardsPageSkeleton() {
       </section>
 
       <section className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {Array.from({ length: 8 }, (_, index) => (
+        {Array.from({ length: CARDS_PAGE_SKELETON_COUNT }, (_, index) => (
           <div
             key={index}
             className="flex flex-col overflow-hidden rounded-xl border border-foreground/10 bg-card"

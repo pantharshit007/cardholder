@@ -74,7 +74,12 @@ export const DEFAULT_CATEGORY_STRIPE = 'var(--primary)'
 
 export const PAGE_SIZE = 24
 
+export const BYTES_PER_MEBIBYTE = 1024 * 1024
 export const MAX_IMAGE_BYTES = 5 * 1024 * 1024
+export const MAX_IMAGE_SIZE_MEBIBYTES = MAX_IMAGE_BYTES / BYTES_PER_MEBIBYTE
+export const MULTIPART_OVERHEAD_BYTES = 256 * 1024
+export const MAX_UPLOAD_REQUEST_BYTES =
+  MAX_IMAGE_BYTES + MULTIPART_OVERHEAD_BYTES
 
 export const ALLOWED_IMAGE_MIME_TYPES = [
   'image/jpeg',
@@ -85,6 +90,10 @@ export const ALLOWED_IMAGE_MIME_TYPES = [
 export const CARD_THUMBNAIL_WIDTH = 400
 export const CARD_THUMBNAIL_HEIGHT = 250
 export const CARD_DETAIL_IMAGE_WIDTH = 1200
+export const CARDS_PAGE_SKELETON_COUNT = 8
+export const COPY_FEEDBACK_TIMEOUT_MS = 2000
+export const CLOUDINARY_API_BASE_URL = 'https://api.cloudinary.com/v1_1'
+export const CLOUDINARY_CLEANUP_BATCH_SIZE = 10
 
 export const CARD_SORT_OPTIONS = [
   'newest',

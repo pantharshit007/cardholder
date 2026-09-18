@@ -2,11 +2,13 @@ import { Link, createFileRoute } from '@tanstack/react-router'
 import { ArrowLeftIcon } from 'lucide-react'
 
 import { CardForm } from '@/components/card-form'
+import { CardFormSkeleton } from '@/components/card-form-skeleton'
 import { CARDS_PATH } from '@/constants'
 import { listCategories } from '@/server/categories'
 
 export const Route = createFileRoute('/_authenticated/cards/new')({
   loader: () => listCategories(),
+  pendingComponent: CardFormSkeleton,
   component: CreateCardRoute,
 })
 

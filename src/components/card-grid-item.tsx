@@ -10,9 +10,7 @@ import { categoryStripeColor } from '@/utils/category-color'
 
 export function CardGridItem({ card }: { card: CardListItem }) {
   const stripeColor = categoryStripeColor(card.categoryColor ?? null)
-  const thumbnailUrl = card.imageUrl
-    ? getCardThumbnailUrl(card.imageUrl, { width: 400, height: 240 })
-    : null
+  const thumbnailUrl = card.imageUrl ? getCardThumbnailUrl(card.imageUrl) : null
 
   return (
     <Link

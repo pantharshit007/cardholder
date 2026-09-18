@@ -1,9 +1,20 @@
 import { and, asc, desc, eq, ilike, isNull, or } from 'drizzle-orm'
 
 import { db } from '@/db'
-import { cards, categories } from '@/db/schema'
-import { deleteCloudinaryImage } from '@/services/cloudinary'
-import type { CardListItem, CardRecord, ListCardsFilter } from '@/types/card'
+import {
+  cardImageUploads,
+  cards,
+  categories,
+  cloudinaryCleanupJobs,
+} from '@/db/schema'
+import { discardCardImageUploadForUser } from '@/services/card-upload.service'
+import { processCloudinaryCleanupJobs } from '@/services/cloudinary-cleanup.service'
+import type {
+  Card,
+  CardListItem,
+  CardRecord,
+  ListCardsFilter,
+} from '@/types/card'
 import type { CategoryColorHex } from '@/utils/category-color'
 
 export async function listCardsForUser(
@@ -136,51 +147,104 @@ export async function createCardForUser(input: {
   company?: string | null
   notes?: string | null
   categoryId?: string | null
-  imageUrl?: string | null
-  imagePublicId?: string | null
+  imageUploadId?: string | null
 }): Promise<CardRecord> {
-  if (input.categoryId) {
-    const [cat] = await db
-      .select({ id: categories.id })
-      .from(categories)
-      .where(
-        and(
-          eq(categories.id, input.categoryId),
-          eq(categories.userId, input.userId),
-        ),
-      )
-      .limit(1)
+  let createdRecord: CardRecord
 
-    if (!cat) {
-      throw new Error('The selected category does not exist.')
-    }
-  }
+  try {
+    createdRecord = await db.transaction(async (tx) => {
+      let selectedCategory: { name: string; color: string | null } | null = null
 
-  const [created] = await db
-    .insert(cards)
-    .values({
-      userId: input.userId,
-      name: input.name,
-      phone: input.phone ?? null,
-      email: input.email ?? null,
-      company: input.company ?? null,
-      notes: input.notes ?? null,
-      categoryId: input.categoryId ?? null,
-      imageUrl: input.imageUrl ?? null,
-      imagePublicId: input.imagePublicId ?? null,
+      if (input.categoryId) {
+        const [category] = await tx
+          .select({ name: categories.name, color: categories.color })
+          .from(categories)
+          .where(
+            and(
+              eq(categories.id, input.categoryId),
+              eq(categories.userId, input.userId),
+            ),
+          )
+          .limit(1)
+
+        if (!category) {
+          throw new Error('The selected category does not exist.')
+        }
+
+        selectedCategory = category
+      }
+
+      const [upload] = input.imageUploadId
+        ? await tx
+            .select({
+              imageUrl: cardImageUploads.imageUrl,
+              imagePublicId: cardImageUploads.imagePublicId,
+            })
+            .from(cardImageUploads)
+            .where(
+              and(
+                eq(cardImageUploads.id, input.imageUploadId),
+                eq(cardImageUploads.userId, input.userId),
+                isNull(cardImageUploads.claimedAt),
+              ),
+            )
+            .limit(1)
+        : []
+
+      if (input.imageUploadId && !upload) {
+        throw new Error('The image upload is invalid or has expired.')
+      }
+
+      const [created] = await tx
+        .insert(cards)
+        .values({
+          userId: input.userId,
+          name: input.name,
+          phone: input.phone ?? null,
+          email: input.email ?? null,
+          company: input.company ?? null,
+          notes: input.notes ?? null,
+          categoryId: input.categoryId ?? null,
+          imageUrl: upload?.imageUrl ?? null,
+          imagePublicId: upload?.imagePublicId ?? null,
+        })
+        .returning()
+
+      if (!created) {
+        throw new Error('Failed to create the card.')
+      }
+
+      if (input.imageUploadId) {
+        const [claimed] = await tx
+          .update(cardImageUploads)
+          .set({ claimedAt: new Date() })
+          .where(
+            and(
+              eq(cardImageUploads.id, input.imageUploadId),
+              eq(cardImageUploads.userId, input.userId),
+              isNull(cardImageUploads.claimedAt),
+            ),
+          )
+          .returning()
+
+        if (!claimed) {
+          throw new Error('The image upload has already been used.')
+        }
+      }
+
+      return toCardRecord(created, selectedCategory)
     })
-    .returning()
-
-  if (!created) {
-    throw new Error('Failed to create the card.')
+  } catch (error) {
+    if (input.imageUploadId) {
+      await discardUploadAfterFailedPersistence(
+        input.userId,
+        input.imageUploadId,
+      )
+    }
+    throw error
   }
 
-  const record = await getCardForUser(input.userId, created.id)
-  if (!record) {
-    throw new Error('Card was created but could not be retrieved.')
-  }
-
-  return record
+  return createdRecord
 }
 
 export async function updateCardForUser(input: {
@@ -192,55 +256,149 @@ export async function updateCardForUser(input: {
   company?: string | null
   notes?: string | null
   categoryId?: string | null
-  imageUrl?: string | null
-  imagePublicId?: string | null
+  imageUploadId?: string | null
+  removeImage?: boolean
 }): Promise<CardRecord | null> {
-  const existing = await getCardForUser(input.userId, input.id)
-  if (!existing) {
+  let updatedRecord: CardRecord | null
+
+  try {
+    updatedRecord = await db.transaction(async (tx) => {
+      const [existing] = await tx
+        .select({
+          id: cards.id,
+          imageUrl: cards.imageUrl,
+          imagePublicId: cards.imagePublicId,
+        })
+        .from(cards)
+        .where(and(eq(cards.id, input.id), eq(cards.userId, input.userId)))
+        .limit(1)
+
+      if (!existing) {
+        return null
+      }
+
+      let selectedCategory: { name: string; color: string | null } | null = null
+
+      if (input.categoryId) {
+        const [category] = await tx
+          .select({ name: categories.name, color: categories.color })
+          .from(categories)
+          .where(
+            and(
+              eq(categories.id, input.categoryId),
+              eq(categories.userId, input.userId),
+            ),
+          )
+          .limit(1)
+
+        if (!category) {
+          throw new Error('The selected category does not exist.')
+        }
+
+        selectedCategory = category
+      }
+
+      const [upload] = input.imageUploadId
+        ? await tx
+            .select({
+              imageUrl: cardImageUploads.imageUrl,
+              imagePublicId: cardImageUploads.imagePublicId,
+            })
+            .from(cardImageUploads)
+            .where(
+              and(
+                eq(cardImageUploads.id, input.imageUploadId),
+                eq(cardImageUploads.userId, input.userId),
+                isNull(cardImageUploads.claimedAt),
+              ),
+            )
+            .limit(1)
+        : []
+
+      if (input.imageUploadId && !upload) {
+        throw new Error('The image upload is invalid or has expired.')
+      }
+
+      const imageUrl = upload
+        ? upload.imageUrl
+        : input.removeImage
+          ? null
+          : existing.imageUrl
+      const imagePublicId = upload
+        ? upload.imagePublicId
+        : input.removeImage
+          ? null
+          : existing.imagePublicId
+
+      const [updated] = await tx
+        .update(cards)
+        .set({
+          name: input.name,
+          phone: input.phone ?? null,
+          email: input.email ?? null,
+          company: input.company ?? null,
+          notes: input.notes ?? null,
+          categoryId: input.categoryId ?? null,
+          imageUrl,
+          imagePublicId,
+        })
+        .where(and(eq(cards.id, input.id), eq(cards.userId, input.userId)))
+        .returning()
+
+      if (!updated) {
+        return null
+      }
+
+      if (existing.imagePublicId && existing.imagePublicId !== imagePublicId) {
+        await tx
+          .insert(cloudinaryCleanupJobs)
+          .values({ imagePublicId: existing.imagePublicId })
+          .onConflictDoNothing({ target: cloudinaryCleanupJobs.imagePublicId })
+      }
+
+      if (input.imageUploadId) {
+        const [claimed] = await tx
+          .update(cardImageUploads)
+          .set({ claimedAt: new Date() })
+          .where(
+            and(
+              eq(cardImageUploads.id, input.imageUploadId),
+              eq(cardImageUploads.userId, input.userId),
+              isNull(cardImageUploads.claimedAt),
+            ),
+          )
+          .returning()
+
+        if (!claimed) {
+          throw new Error('The image upload has already been used.')
+        }
+      }
+
+      return toCardRecord(updated, selectedCategory)
+    })
+  } catch (error) {
+    if (input.imageUploadId) {
+      await discardUploadAfterFailedPersistence(
+        input.userId,
+        input.imageUploadId,
+      )
+    }
+    throw error
+  }
+
+  if (!updatedRecord) {
+    if (input.imageUploadId) {
+      await discardUploadAfterFailedPersistence(
+        input.userId,
+        input.imageUploadId,
+      )
+    }
     return null
   }
 
-  if (input.categoryId) {
-    const [cat] = await db
-      .select({ id: categories.id })
-      .from(categories)
-      .where(
-        and(
-          eq(categories.id, input.categoryId),
-          eq(categories.userId, input.userId),
-        ),
-      )
-      .limit(1)
+  await processCleanupBestEffort()
 
-    if (!cat) {
-      throw new Error('The selected category does not exist.')
-    }
-  }
-
-  // If replacing image with a new public ID, clean up the old one
-  if (
-    existing.imagePublicId &&
-    input.imagePublicId &&
-    existing.imagePublicId !== input.imagePublicId
-  ) {
-    void deleteCloudinaryImage(existing.imagePublicId)
-  }
-
-  await db
-    .update(cards)
-    .set({
-      name: input.name,
-      phone: input.phone ?? null,
-      email: input.email ?? null,
-      company: input.company ?? null,
-      notes: input.notes ?? null,
-      categoryId: input.categoryId ?? null,
-      imageUrl: input.imageUrl ?? null,
-      imagePublicId: input.imagePublicId ?? null,
-    })
-    .where(and(eq(cards.id, input.id), eq(cards.userId, input.userId)))
-
-  return getCardForUser(input.userId, input.id)
+  return updatedRecord
 }
 
 export async function deleteCardForUser(input: {
@@ -252,13 +410,78 @@ export async function deleteCardForUser(input: {
     return null
   }
 
-  await db
-    .delete(cards)
-    .where(and(eq(cards.id, input.id), eq(cards.userId, input.userId)))
+  const deleted = await db.transaction(async (tx) => {
+    const [current] = await tx
+      .select({ imagePublicId: cards.imagePublicId })
+      .from(cards)
+      .where(and(eq(cards.id, input.id), eq(cards.userId, input.userId)))
+      .limit(1)
+      .for('update')
 
-  if (existing.imagePublicId) {
-    void deleteCloudinaryImage(existing.imagePublicId)
+    if (!current) {
+      return false
+    }
+
+    if (current.imagePublicId) {
+      await tx
+        .insert(cloudinaryCleanupJobs)
+        .values({ imagePublicId: current.imagePublicId })
+        .onConflictDoNothing({ target: cloudinaryCleanupJobs.imagePublicId })
+    }
+
+    await tx
+      .delete(cards)
+      .where(and(eq(cards.id, input.id), eq(cards.userId, input.userId)))
+
+    return true
+  })
+
+  if (!deleted) {
+    return null
   }
 
+  await processCleanupBestEffort()
+
   return existing
+}
+
+async function discardUploadAfterFailedPersistence(
+  userId: string,
+  imageUploadId: string,
+): Promise<void> {
+  try {
+    await discardCardImageUploadForUser({ userId, id: imageUploadId })
+  } catch (error) {
+    console.warn('Failed to queue unused image cleanup:', error)
+  }
+}
+
+async function processCleanupBestEffort(): Promise<void> {
+  try {
+    await processCloudinaryCleanupJobs()
+  } catch (error) {
+    console.warn('Failed to process Cloudinary cleanup queue:', error)
+  }
+}
+
+function toCardRecord(
+  card: Card,
+  category: { name: string; color: string | null } | null,
+): CardRecord {
+  return {
+    id: card.id,
+    userId: card.userId,
+    name: card.name,
+    phone: card.phone,
+    email: card.email,
+    company: card.company,
+    notes: card.notes,
+    categoryId: card.categoryId,
+    categoryName: category?.name ?? null,
+    categoryColor: category?.color ?? null,
+    imageUrl: card.imageUrl,
+    imagePublicId: card.imagePublicId,
+    createdAt: card.createdAt.toISOString(),
+    updatedAt: card.updatedAt.toISOString(),
+  }
 }

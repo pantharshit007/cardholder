@@ -146,3 +146,17 @@ export const AUTOFILL_FIELDS = [
   { key: 'email', label: 'Email' },
   { key: 'categoryId', label: 'Category' },
 ] as const
+
+export const IMAGE_UPLOAD_ERRORS = {
+  saveFailed: 'Could not save the image upload. Please try again.',
+  providerFailed:
+    'The image service could not upload your image. Please try again.',
+  networkFailed:
+    'Could not reach the server. Check your connection and try again.',
+  invalidImage:
+    'Please choose a JPEG, PNG, or WebP image within the upload size limit.',
+  unauthorized: 'Your session has expired. Please sign in again.',
+  tooLarge: 'The image upload is too large. Please choose a smaller image.',
+  unavailable:
+    'Image upload is temporarily unavailable. Please try again later.',
+} as const

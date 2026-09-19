@@ -1,5 +1,7 @@
+import { imageUploadErrorMessage } from '@/utils/error'
 import {
   ALLOWED_IMAGE_MIME_TYPES,
+  IMAGE_UPLOAD_ERRORS,
   CARD_DETAIL_IMAGE_WIDTH,
   CARD_THUMBNAIL_HEIGHT,
   CARD_THUMBNAIL_WIDTH,
@@ -55,31 +57,12 @@ export async function uploadImageToCloudinary(
       method: 'POST',
       body: formData,
     })
-  } catch (error) {
-    const message =
-      error instanceof Error ? error.message : 'Network error during upload.'
-    throw new CloudinaryUploadError(`Failed to upload image: ${message}`)
+  } catch {
+    throw new CloudinaryUploadError(IMAGE_UPLOAD_ERRORS.networkFailed)
   }
 
   if (!response.ok) {
-    let errorDetail = response.statusText
-    try {
-      const errorJson = (await response.json()) as {
-        error?: { message?: string }
-        message?: string
-      }
-      if (errorJson.error?.message) {
-        errorDetail = errorJson.error.message
-      } else if (errorJson.message) {
-        errorDetail = errorJson.message
-      }
-    } catch {
-      // Ignore JSON parse failure on error response
-    }
-
-    throw new CloudinaryUploadError(
-      `Cloudinary upload failed (${response.status}): ${errorDetail}`,
-    )
+    throw new CloudinaryUploadError(imageUploadErrorMessage(response.status))
   }
 
   const data = (await response.json()) as {

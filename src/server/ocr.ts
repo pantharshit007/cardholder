@@ -1,5 +1,5 @@
-import type { AutofillStage } from '@/types/autofill-error'
-import { describeAutofillError } from '@/utils/autofill-error'
+import type { AutofillStage } from '@/types/error'
+import { describeAutofillError } from '@/utils/error'
 import { OCR_CONFIG } from '@/constants'
 import { env } from '@/env'
 import { auth } from '@/lib/auth'

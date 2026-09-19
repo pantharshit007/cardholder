@@ -1,6 +1,6 @@
 import { POSTGRES_UNIQUE_VIOLATION } from '@/constants'
 
-function getErrorCode(error: unknown): string | undefined {
+export function getPostgresErrorCode(error: unknown): string | undefined {
   const seen = new Set<unknown>()
   let current: unknown = error
 
@@ -8,7 +8,7 @@ function getErrorCode(error: unknown): string | undefined {
     seen.add(current)
 
     if ('code' in current && typeof current.code === 'string') {
-      return current.code
+      if (/^[0-9A-Z]{5}$/.test(current.code)) return current.code
     }
 
     current = 'cause' in current ? current.cause : undefined
@@ -18,5 +18,5 @@ function getErrorCode(error: unknown): string | undefined {
 }
 
 export function isUniqueViolation(error: unknown): boolean {
-  return getErrorCode(error) === POSTGRES_UNIQUE_VIOLATION
+  return getPostgresErrorCode(error) === POSTGRES_UNIQUE_VIOLATION
 }

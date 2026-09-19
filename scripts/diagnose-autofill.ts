@@ -1,6 +1,6 @@
 import { env } from '../src/env'
 import { extractCardFromText } from '../src/services/card-extraction'
-import { describeAutofillError } from '../src/utils/autofill-error'
+import { describeAutofillError } from '../src/utils/error'
 
 /** Run one synthetic extraction; never print credentials, OCR text, or provider bodies. */
 async function main() {

@@ -1,4 +1,9 @@
-import type { AutofillFailure, AutofillStage } from '@/types/autofill-error'
+import { IMAGE_UPLOAD_ERRORS } from '@/constants'
+import type {
+  AutofillFailure,
+  AutofillStage,
+  ImageUploadStage,
+} from '@/types/error'
 import { RequestBodyTooLargeError } from '@/utils/request-body'
 
 /** Describe failures without exposing provider bodies, credentials, or OCR text. */
@@ -96,4 +101,38 @@ export function describeAutofillError(
         ? 'OCR.space could not read the image. Please try again or use a clearer photo.'
         : 'OpenRouter could not extract the card details. Please try again or enter them manually.',
   }
+}
+
+/** Never serialize an upstream exception or database query into an API response. */
+export function imageUploadFailure(
+  error: unknown,
+  stage: ImageUploadStage,
+): Response {
+  const status =
+    error instanceof RequestBodyTooLargeError
+      ? 413
+      : stage === 'input'
+        ? 400
+        : stage === 'provider'
+          ? 502
+          : stage === 'configuration'
+            ? 503
+            : 500
+  return Response.json(
+    { message: imageUploadErrorMessage(status) },
+    {
+      status,
+      headers: { 'Cache-Control': 'no-store' },
+    },
+  )
+}
+
+/** Status-based messages also protect clients talking to an older, verbose server. */
+export function imageUploadErrorMessage(status: number): string {
+  if (status === 401) return IMAGE_UPLOAD_ERRORS.unauthorized
+  if (status === 400) return IMAGE_UPLOAD_ERRORS.invalidImage
+  if (status === 413) return IMAGE_UPLOAD_ERRORS.tooLarge
+  if (status === 502) return IMAGE_UPLOAD_ERRORS.providerFailed
+  if (status === 503) return IMAGE_UPLOAD_ERRORS.unavailable
+  return IMAGE_UPLOAD_ERRORS.saveFailed
 }

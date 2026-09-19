@@ -1,3 +1,6 @@
+import type { ImageUploadStage } from '@/types/error'
+import { imageUploadFailure } from '@/utils/error'
+import { getPostgresErrorCode } from '@/utils/postgres-error'
 import { createFileRoute } from '@tanstack/react-router'
 
 import {
@@ -11,10 +14,7 @@ import { env } from '@/env'
 import { auth } from '@/lib/auth'
 import { createCardImageUploadForUser } from '@/services/card-upload.service'
 import { deleteCloudinaryImage } from '@/services/cloudinary'
-import {
-  readFormDataWithLimit,
-  RequestBodyTooLargeError,
-} from '@/utils/request-body'
+import { readFormDataWithLimit } from '@/utils/request-body'
 
 export const Route = createFileRoute('/api/upload')({
   server: {
@@ -26,10 +26,14 @@ export const Route = createFileRoute('/api/upload')({
         if (!session?.user) {
           return new Response(JSON.stringify({ message: 'Unauthorized' }), {
             status: 401,
-            headers: { 'content-type': 'application/json' },
+            headers: {
+              'content-type': 'application/json',
+              'cache-control': 'no-store',
+            },
           })
         }
 
+        let stage: ImageUploadStage = 'input'
         try {
           const formData = await readFormDataWithLimit(
             request,
@@ -42,7 +46,10 @@ export const Route = createFileRoute('/api/upload')({
               JSON.stringify({ message: 'No image file provided.' }),
               {
                 status: 400,
-                headers: { 'content-type': 'application/json' },
+                headers: {
+                  'content-type': 'application/json',
+                  'cache-control': 'no-store',
+                },
               },
             )
           }
@@ -54,7 +61,10 @@ export const Route = createFileRoute('/api/upload')({
               }),
               {
                 status: 400,
-                headers: { 'content-type': 'application/json' },
+                headers: {
+                  'content-type': 'application/json',
+                  'cache-control': 'no-store',
+                },
               },
             )
           }
@@ -70,11 +80,15 @@ export const Route = createFileRoute('/api/upload')({
               }),
               {
                 status: 400,
-                headers: { 'content-type': 'application/json' },
+                headers: {
+                  'content-type': 'application/json',
+                  'cache-control': 'no-store',
+                },
               },
             )
           }
 
+          stage = 'configuration'
           const cloudName = env.VITE_CLOUDINARY_CLOUD_NAME
           const uploadPreset = env.VITE_CLOUDINARY_UPLOAD_PRESET
 
@@ -90,6 +104,7 @@ export const Route = createFileRoute('/api/upload')({
           cloudinaryFormData.append('file', file)
           cloudinaryFormData.append('upload_preset', uploadPreset)
 
+          stage = 'provider'
           const cloudinaryRes = await fetch(
             `${CLOUDINARY_API_BASE_URL}/${cloudName}/image/upload`,
             {
@@ -108,13 +123,10 @@ export const Route = createFileRoute('/api/upload')({
           }
 
           if (!cloudinaryRes.ok) {
-            const errorMsg =
-              result.error?.message ??
-              (cloudinaryRes.statusText || 'Upload failed')
-            return new Response(JSON.stringify({ message: errorMsg }), {
+            console.warn('Image upload provider failed', {
               status: cloudinaryRes.status,
-              headers: { 'content-type': 'application/json' },
             })
+            return imageUploadFailure(null, stage)
           }
 
           if (!result.secure_url || !result.public_id) {
@@ -123,6 +135,7 @@ export const Route = createFileRoute('/api/upload')({
             )
           }
 
+          stage = 'database'
           let upload
           try {
             upload = await createCardImageUploadForUser({
@@ -145,23 +158,18 @@ export const Route = createFileRoute('/api/upload')({
             }),
             {
               status: 200,
-              headers: { 'content-type': 'application/json' },
+              headers: {
+                'content-type': 'application/json',
+                'cache-control': 'no-store',
+              },
             },
           )
         } catch (error) {
-          if (error instanceof RequestBodyTooLargeError) {
-            return new Response(JSON.stringify({ message: error.message }), {
-              status: 413,
-              headers: { 'content-type': 'application/json' },
-            })
-          }
-
-          const message =
-            error instanceof Error ? error.message : 'Server upload error'
-          return new Response(JSON.stringify({ message }), {
-            status: 500,
-            headers: { 'content-type': 'application/json' },
+          console.warn('Image upload failed', {
+            stage,
+            postgresCode: getPostgresErrorCode(error),
           })
+          return imageUploadFailure(error, stage)
         }
       },
     },

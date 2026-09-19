@@ -1,4 +1,5 @@
 export type AutofillStage = 'upload' | 'ocr' | 'categories' | 'extraction'
+
 export type AutofillFailure = {
   stage: AutofillStage
   status: number
@@ -6,3 +7,9 @@ export type AutofillFailure = {
   reason: string
   upstreamStatus?: number
 }
+
+export type ImageUploadStage =
+  | 'input'
+  | 'configuration'
+  | 'provider'
+  | 'database'

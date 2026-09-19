@@ -1,3 +1,3 @@
 - [ ] delete the images once the card is deleted.
-
+- [ ] Add location as a field in the card.
 - [ ] Group other related standalone constants in `src/constants.ts` into cohesive configuration objects.

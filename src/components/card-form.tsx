@@ -8,6 +8,7 @@ import {
   Loader2Icon,
   MailIcon,
   PhoneIcon,
+  ScanTextIcon,
   UploadCloudIcon,
   UserIcon,
   XIcon,
@@ -45,6 +46,8 @@ import {
 import type { MutationResult } from '@/types/api'
 import type { CardRecord } from '@/types/card'
 import type { CategoryListItem } from '@/types/category'
+import { autofillCardFromImage } from '@/services/card-autofill'
+import type { ExtractedCard } from '@/types/ocr'
 import { categoryStripeColor } from '@/utils/category-color'
 
 export function CardForm({
@@ -82,6 +85,62 @@ export function CardForm({
   const fileInputRef = useRef<HTMLInputElement>(null)
   const previewObjectUrlRef = useRef<string | null>(null)
 
+  const scanRef = useRef<AbortController | null>(null)
+  const editedFieldsRef = useRef(new Set<keyof ExtractedCard>())
+  const [isScanning, setIsScanning] = useState(false)
+
+  function cancelScan() {
+    scanRef.current?.abort()
+    scanRef.current = null
+    setIsScanning(false)
+  }
+
+  async function handleAutofill() {
+    if (!imageFile || isBusy || scanRef.current) return
+    const controller = new AbortController()
+    scanRef.current = controller
+    editedFieldsRef.current.clear()
+    setIsScanning(true)
+    try {
+      const fields = await autofillCardFromImage(imageFile, controller.signal)
+      if (controller.signal.aborted) return
+      const apply = (field: keyof ExtractedCard, current: string) =>
+        current.trim() || editedFieldsRef.current.has(field)
+          ? current
+          : (fields[field] ?? current)
+      setName((current) => apply('name', current))
+      setPhone((current) => apply('phone', current))
+      setEmail((current) => apply('email', current))
+      setCompany((current) => apply('company', current))
+      setCategoryId((current) =>
+        current !== 'none' || editedFieldsRef.current.has('categoryId')
+          ? current
+          : fields.categoryId &&
+              categories.some((category) => category.id === fields.categoryId)
+            ? fields.categoryId
+            : current,
+      )
+      if (Object.values(fields).some(Boolean)) {
+        toast.success('Scan complete. Review the details before saving.')
+      } else {
+        toast.info(
+          'No contact details found. Try a clearer photo or enter them manually.',
+        )
+      }
+    } catch {
+      if (!controller.signal.aborted) {
+        toast.error(
+          'Could not scan this card. Try again or enter the details manually.',
+        )
+      }
+    } finally {
+      if (scanRef.current === controller) {
+        scanRef.current = null
+        setIsScanning(false)
+      }
+    }
+  }
+
   // Status
   const [isUploading, setIsUploading] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
@@ -93,6 +152,7 @@ export function CardForm({
 
   useEffect(
     () => () => {
+      scanRef.current?.abort()
       if (previewObjectUrlRef.current) {
         URL.revokeObjectURL(previewObjectUrlRef.current)
       }
@@ -110,6 +170,7 @@ export function CardForm({
   function handleFileSelect(file: File) {
     try {
       validateImageFile(file)
+      cancelScan()
       revokePreviewObjectUrl()
       const objectUrl = URL.createObjectURL(file)
       previewObjectUrlRef.current = objectUrl
@@ -136,6 +197,7 @@ export function CardForm({
   }
 
   function handleRemoveImage() {
+    cancelScan()
     revokePreviewObjectUrl()
     setImageFile(null)
     setPreviewUrl(null)
@@ -147,6 +209,8 @@ export function CardForm({
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    if (isBusy) return
+    cancelScan()
     setNameError(undefined)
     setEmailError(undefined)
     setFormError(undefined)
@@ -348,6 +412,29 @@ export function CardForm({
           </label>
         )}
 
+        {imageFile ? (
+          <div className="mt-3 flex flex-wrap items-center gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              disabled={isBusy || isScanning}
+              onClick={() => void handleAutofill()}
+            >
+              {isScanning ? (
+                <Loader2Icon className="size-4 animate-spin" />
+              ) : (
+                <ScanTextIcon className="size-4" />
+              )}
+              {isScanning ? 'Reading card…' : 'Auto-fill details'}
+            </Button>
+            <p role="status" className="text-xs text-muted-foreground">
+              {isScanning
+                ? 'Reading your image. You can keep typing.'
+                : 'Fills empty fields only. Review before saving.'}
+            </p>
+          </div>
+        ) : null}
+
         <input
           id="card-image-file-input"
           ref={fileInputRef}
@@ -386,6 +473,7 @@ export function CardForm({
               disabled={isBusy}
               autoFocus={!isEditing}
               onChange={(e) => {
+                editedFieldsRef.current.add('name')
                 setName(e.target.value)
                 setNameError(undefined)
               }}
@@ -410,7 +498,10 @@ export function CardForm({
               maxLength={FIELD_LIMITS.company}
               placeholder="e.g. Acme Corp"
               disabled={isBusy}
-              onChange={(e) => setCompany(e.target.value)}
+              onChange={(e) => {
+                editedFieldsRef.current.add('company')
+                setCompany(e.target.value)
+              }}
               className="bg-card"
             />
           </Field>
@@ -425,7 +516,10 @@ export function CardForm({
             </FieldLabel>
             <Select
               value={categoryId}
-              onValueChange={setCategoryId}
+              onValueChange={(value) => {
+                editedFieldsRef.current.add('categoryId')
+                setCategoryId(value)
+              }}
               disabled={isBusy}
             >
               <SelectTrigger id="card-category" className="w-full bg-card">
@@ -469,7 +563,10 @@ export function CardForm({
               maxLength={FIELD_LIMITS.phone}
               placeholder="e.g. +1 (555) 012-3456"
               disabled={isBusy}
-              onChange={(e) => setPhone(e.target.value)}
+              onChange={(e) => {
+                editedFieldsRef.current.add('phone')
+                setPhone(e.target.value)
+              }}
               className="bg-card font-mono text-sm"
             />
           </Field>
@@ -491,6 +588,7 @@ export function CardForm({
               placeholder="e.g. jane@example.com"
               disabled={isBusy}
               onChange={(e) => {
+                editedFieldsRef.current.add('email')
                 setEmail(e.target.value)
                 setEmailError(undefined)
               }}

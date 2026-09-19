@@ -59,13 +59,12 @@ Browser (React + TanStack Router + shadcn/ui)
         └─ OCR proxy    ──────────────────────► OCR.space API (server-side, key hidden)
 ```
 
-**Image + OCR flow (important):**
-1. Browser uploads the image directly to Cloudinary (unsigned preset). Cloudinary returns `secure_url` + `public_id`.
-2. Browser calls a server function `ocrFromImageUrl({ imageUrl })`.
-3. Server calls OCR.space with the Cloudinary `url` param + API key, parses text, returns a transient best-guess `{ name, phone }`. Raw OCR text is **not** persisted.
-4. Browser pre-fills the create-card form. User edits/confirms. On submit, the card (including `imageUrl` + `imagePublicId`) is saved via `createCard`.
-
-This keeps the OCR key server-side while still using unsigned client uploads.
+**Image + OCR flow (Phase 6):**
+1. Selecting an image creates a local preview; no Cloudinary upload occurs yet.
+2. The optional **Auto-fill details** button prepares a JPEG copy under OCR.space's 1 MB limit and posts it to authenticated `/api/ocr`.
+3. The server sends the file to OCR.space, then passes transient OCR text to OpenRouter using `google/gemini-3.1-flash-lite`. Only validated `name`, `phone`, `email`, `company`, and a suggested `categoryId` return to the browser. Available categories are loaded server-side for the authenticated user; full card descriptions help select the best match. Raw OCR text is neither stored nor logged.
+4. Autofill fills empty fields only, preserving edits made during scanning. Replacing/removing the image, saving, or leaving the form cancels pending results. Failures leave manual entry available.
+5. On form submission, the existing upload flow saves the original image to Cloudinary and creates/updates the card metadata.
 
 ---
 
@@ -337,24 +336,26 @@ Each phase has: **Goal → Tasks → Deliverables → Acceptance Criteria → Re
 
 ---
 
-### Phase 6 — OCR Assist (DEFERRED / Post-MVP)
+### Phase 6 — OCR + AI Autofill
 
-> **Status: NOT part of the initial build.** The MVP relies entirely on the manual form (Phase 5). Do **not** implement this phase unless explicitly asked. It is documented here so the architecture stays ready for it. Raw OCR text is **never stored** — OCR output is used transiently to pre-fill the form and then discarded, so no schema change is needed when this lands.
+**Implemented on explicit request:** Optional autofill before form submission. Manual fields remain authoritative; no database schema changes.
 
-**Future goal:** Let the user *optionally* auto-fill the card form from the uploaded image. OCR is a convenience only — the manual form is always authoritative.
+- `src/services/ocr.ts`: multipart file upload to OCR.space, engine 2, English, orientation detection and scaling, bounded timeout.
+- `src/services/card-extraction.ts`: `@openrouter/sdk` client using `google/gemini-3.1-flash-lite`, strict structured output and server-side Zod validation. `CARD_EXTRACTION_CONFIG.models` sends Gemini first and `meta/muse-spark-1.3-contributor` as a fallback. The ordered list accepts one to three `AIModel` enum values. Category suggestions must match the authenticated user’s supplied category IDs, or be null.
+- `src/server/ocr.ts` + `/api/ocr`: authenticate with `requireUser()`, enforce same-origin requests and bounded image input, orchestrate extraction, return only contact fields with no-store caching.
+- `src/services/card-autofill.ts`: prepare a small JPEG scan copy in the browser, retaining the original image for Save.
+- Form: explicit Auto-fill details button, loading feedback, empty-field-only updates, protection for concurrent edits and stale scans, non-blocking failures. Category suggestions only fill an unselected category and preserve choices made during scanning.
+- Server-only configuration: `OCR_SPACE_API_KEY` defaults to `helloworld`; `OPENROUTER_API_KEY` enables extraction. Missing AI configuration disables scanning gracefully without blocking manual entry.
 
-**Planned approach (when revisited):** OCR will be **paired with an AI endpoint** for best results — raw OCR text (from OCR.space) is passed to an LLM/AI extraction endpoint that returns structured fields (`name`, `phone`, `email`, `company`) far more reliably than regex heuristics. The OCR text is used in-memory only and not saved. Design it as a two-step service so either step can be swapped:
-1. **OCR step** — `src/services/ocr.ts` → `ocrFromImageUrl({ imageUrl })`. POST to OCR.space `https://api.ocr.space/parse/image`, `apikey` header = `OCR_SPACE_API_KEY` (defaults to the free shared `helloworld`), image via the `url` param (Cloudinary `secure_url`), `language=eng`, `OCREngine=2`, `scale=true`. All tunables (endpoint, engine, timeout) live in `src/constants.ts`. Returns `{ ok, text }` (transient).
-2. **AI extraction step** — `src/services/card-extraction.ts` → takes the OCR text, calls the AI endpoint, returns structured `{ name?, phone?, email?, company? }`. Keep the provider behind a small interface so it's swappable.
-3. **Controller** `src/server/ocr.ts` orchestrates step 1 → step 2 (both `requireUser()`), returns the structured guess. No raw text is returned to be stored.
-4. **UI:** after Cloudinary upload, a "Scan card" action pre-fills only **empty** form fields (never overwrites user edits). Any failure/rate-limit → non-blocking toast, manual entry proceeds.
+**Verification:** `pnpm typecheck`, `pnpm lint`, and mocked provider tests covering the two-stage pipeline, invalid/empty output, rate limits, timeouts, image validation, and bounded request bodies. Run tests with dummy credentials (no `.env` required):
 
-**Acceptance Criteria (future):**
-- Scanning a clear card pre-fills reasonable fields via the OCR→AI pipeline.
-- OCR/AI failures never block manual card creation.
-- OCR + AI keys are used server-side only (absent from client bundle).
+```sh
+SKIP_ENV_VALIDATION=true OPENROUTER_API_KEY=test OCR_SPACE_API_KEY=test pnpm exec tsx --test tests/ocr.test.ts
+```
 
-**Review Checkpoint:** (Only when implemented) Commit `feat: ocr + ai card extraction assist`.
+**Remaining manual acceptance:** Scan a real clear business card with configured credentials and review the extracted details. Live provider calls are not part of the mocked test suite.
+
+**Review Checkpoint:** Commit only with user permission: `feat: ocr + ai card extraction assist`.
 
 ---
 

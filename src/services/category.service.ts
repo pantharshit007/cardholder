@@ -131,3 +131,11 @@ export async function deleteCategoryForUser(input: {
 
   return deleted ? toCategoryRecord(deleted) : null
 }
+
+export async function listCategoriesForExtraction(userId: string) {
+  return db
+    .select({ id: categories.id, name: categories.name })
+    .from(categories)
+    .where(eq(categories.userId, userId))
+    .orderBy(asc(categories.name))
+}

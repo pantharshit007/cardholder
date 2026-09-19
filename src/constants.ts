@@ -5,6 +5,8 @@ export const DEV_SERVER_PORT = 3000
 export const LOGIN_PATH = '/login' as const
 export const SIGNUP_PATH = '/signup' as const
 export const DEFAULT_POST_AUTH_PATH = '/' as const
+export const CARDS_PATH = '/' as const
+export const CARD_NEW_PATH = '/cards/new' as const
 export const CATEGORIES_PATH = '/categories' as const
 
 export const AUTH_PASSWORD_MIN_LENGTH = 8
@@ -43,6 +45,7 @@ export const FIELD_LIMITS = {
 } as const
 
 export const CATEGORY_NAME_MIN_LENGTH = 1
+export const CARD_NAME_MIN_LENGTH = 1
 
 /** Postgres unique_violation. Used to map duplicate category names. */
 export const POSTGRES_UNIQUE_VIOLATION = '23505'
@@ -71,10 +74,32 @@ export const DEFAULT_CATEGORY_STRIPE = 'var(--primary)'
 
 export const PAGE_SIZE = 24
 
+export const BYTES_PER_MEBIBYTE = 1024 * 1024
 export const MAX_IMAGE_BYTES = 5 * 1024 * 1024
+export const MAX_IMAGE_SIZE_MEBIBYTES = MAX_IMAGE_BYTES / BYTES_PER_MEBIBYTE
+export const MULTIPART_OVERHEAD_BYTES = 256 * 1024
+export const MAX_UPLOAD_REQUEST_BYTES =
+  MAX_IMAGE_BYTES + MULTIPART_OVERHEAD_BYTES
 
 export const ALLOWED_IMAGE_MIME_TYPES = [
   'image/jpeg',
   'image/png',
   'image/webp',
 ] as const
+
+export const CARD_THUMBNAIL_WIDTH = 400
+export const CARD_THUMBNAIL_HEIGHT = 250
+export const CARD_DETAIL_IMAGE_WIDTH = 1200
+export const CARDS_PAGE_SKELETON_COUNT = 8
+export const COPY_FEEDBACK_TIMEOUT_MS = 2000
+export const CLOUDINARY_API_BASE_URL = 'https://api.cloudinary.com/v1_1'
+export const CLOUDINARY_CLEANUP_BATCH_SIZE = 10
+
+export const CARD_SORT_OPTIONS = [
+  'newest',
+  'oldest',
+  'name_asc',
+  'name_desc',
+] as const
+
+export type CardSortOption = (typeof CARD_SORT_OPTIONS)[number]

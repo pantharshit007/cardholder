@@ -11,12 +11,44 @@ import {
 import { db } from '@/db'
 import * as schema from '@/db/schema'
 import { env } from '@/env'
+import { isSharedAddressIpv4 } from '@/utils/ip-address'
+
+function getTrustedOrigins(request?: Request): string[] {
+  const origins = new Set<string>()
+
+  if (env.BETTER_AUTH_URL) {
+    origins.add(env.BETTER_AUTH_URL)
+  }
+
+  const origin = request?.headers.get('origin')
+  const host = request?.headers.get('host')
+
+  if (origin) {
+    try {
+      const url = new URL(origin)
+      if (
+        (host && url.host === host) ||
+        url.hostname === 'localhost' ||
+        url.hostname === '127.0.0.1' ||
+        url.hostname.endsWith('.ts.net') ||
+        isSharedAddressIpv4(url.hostname) ||
+        url.hostname === 'my-dabba'
+      ) {
+        origins.add(origin)
+      }
+    } catch {
+      // Ignore malformed origin
+    }
+  }
+
+  return Array.from(origins)
+}
 
 export const auth = betterAuth({
   appName: APP_NAME,
   secret: env.BETTER_AUTH_SECRET,
   baseURL: env.BETTER_AUTH_URL,
-  trustedOrigins: [env.BETTER_AUTH_URL],
+  trustedOrigins: getTrustedOrigins,
   database: drizzleAdapter(db, {
     provider: 'pg',
     schema,

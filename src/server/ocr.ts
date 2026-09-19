@@ -1,6 +1,8 @@
 import { OCR_CONFIG } from '@/constants'
 import { env } from '@/env'
-import { requireUser } from '@/lib/require-user'
+import { auth } from '@/lib/auth'
+import { consumeOcrQuota } from '@/lib/ocr-rate-limit'
+import { getTrustedOrigins } from '@/utils/trusted-origins'
 import { ocrImageSchema } from '@/lib/validators/ocr'
 import { extractCardFromText } from '@/services/card-extraction'
 import { listCategoriesForExtraction } from '@/services/category.service'
@@ -10,11 +12,22 @@ import {
   RequestBodyTooLargeError,
 } from '@/utils/request-body'
 
+/** Authenticate, limit, and validate scans before calling either external provider. */
 export async function handleCardAutofill(request: Request): Promise<Response> {
-  const user = await requireUser()
+  const session = await auth.api.getSession({ headers: request.headers })
+  const user = session?.user
   const headers = { 'Cache-Control': 'no-store' }
-  // Only same-origin browser requests may initiate paid extraction.
-  if (request.headers.get('origin') !== new URL(request.url).origin) {
+  if (!user)
+    return Response.json(
+      { message: 'Your session has expired. Please sign in again.' },
+      { status: 401, headers },
+    )
+  // Only trusted-origin browser requests may initiate paid extraction.
+  const origin = request.headers.get('origin')
+  if (
+    !origin ||
+    !getTrustedOrigins(request, env.BETTER_AUTH_URL).includes(origin)
+  ) {
     return Response.json(
       { message: 'Invalid request origin.' },
       { status: 403, headers },
@@ -28,6 +41,17 @@ export async function handleCardAutofill(request: Request): Promise<Response> {
       { status: 503, headers },
     )
   }
+  const quota = consumeOcrQuota(user.id)
+  if (!quota.allowed)
+    return Response.json(
+      {
+        message: `Scan limit reached. Try again in ${quota.retryAfter} seconds.`,
+      },
+      {
+        status: 429,
+        headers: { ...headers, 'Retry-After': String(quota.retryAfter) },
+      },
+    )
   try {
     const form = await readFormDataWithLimit(
       request,

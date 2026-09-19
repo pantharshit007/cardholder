@@ -66,6 +66,8 @@ test('OCR sends a file, then OpenRouter returns only validated contact fields', 
         : JSON.parse(String(options?.body))
     assert.deepEqual(body.models, [...CARD_EXTRACTION_CONFIG.models])
     assert.equal(body.model, undefined)
+    assert.equal(body.provider.data_collection, 'deny')
+    assert.equal(body.models.includes('meta/muse-spark-1.3-contributor'), false)
     assert.equal(body.response_format.type, 'json_schema')
     assert.match(body.messages[1].content, /VISHWA KUMAR/)
     return completion(JSON.stringify(contact))

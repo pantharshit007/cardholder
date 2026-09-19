@@ -1,10 +1,12 @@
 import { z } from 'zod'
 
 import { CARD_EXTRACTION_CONFIG } from '@/constants'
+import { createExtractionJsonSchema } from '@/lib/validators/extraction-schema'
 import { getOpenRouterClient } from '@/lib/openrouter'
 import { extractedCardSchema, ocrTextSchema } from '@/lib/validators/ocr'
 import type { CardExtractor } from '@/types/ocr'
 
+/** Extract validated contact fields and a category selected from the user-owned list. */
 export const extractCardFromText: CardExtractor = async (text, categories) => {
   const validatedText = ocrTextSchema.parse(text)
   const categoryIds = categories.map((category) => category.id)
@@ -17,7 +19,7 @@ export const extractCardFromText: CardExtractor = async (text, categories) => {
         models: [...CARD_EXTRACTION_CONFIG.models],
         maxTokens: CARD_EXTRACTION_CONFIG.maxTokens,
         stream: false,
-        provider: { requireParameters: true },
+        provider: { requireParameters: true, dataCollection: 'deny' },
         messages: [
           {
             role: 'system',
@@ -37,7 +39,7 @@ export const extractCardFromText: CardExtractor = async (text, categories) => {
           jsonSchema: {
             name: 'card_contact',
             strict: true,
-            schema: z.toJSONSchema(responseSchema),
+            schema: createExtractionJsonSchema(categoryIds),
           },
         },
       },

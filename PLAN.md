@@ -26,7 +26,7 @@ password: random@123
 | ORM | **Drizzle ORM** + `drizzle-kit` migrations |
 | Auth | **Better Auth** — email + password, sessions in Postgres (single user now, multi-user ready) |
 | Image storage | **Cloudinary**, **unsigned direct-to-Cloudinary** browser upload via upload preset |
-| OCR | **Deferred / post-MVP (optional).** The MVP uses the **manual form only** to enter card info. OCR is not relied upon for the core product. When later enabled: **OCR.space free public endpoint**, called **server-side**, using the shared demo key `helloworld` (no signup); env var `OCR_SPACE_API_KEY` defaults to `helloworld` so a real key can be swapped in without code changes. OCR would only ever *pre-fill* the form — never required |
+| OCR | **Implemented in Phase 6.** Optional server-side OCR.space → OpenRouter autofill; manual entry remains available. OCR text is transient and never persisted by the app. |
 | Categories | **Managed category table** (create/edit/delete; cards reference a category) |
 | Deployment | Portable: buildable for **Cloudflare** or **Vercel**; decision deferred to Phase 8 |
 
@@ -341,8 +341,8 @@ Each phase has: **Goal → Tasks → Deliverables → Acceptance Criteria → Re
 **Implemented on explicit request:** Optional autofill before form submission. Manual fields remain authoritative; no database schema changes.
 
 - `src/services/ocr.ts`: multipart file upload to OCR.space, engine 2, English, orientation detection and scaling, bounded timeout.
-- `src/services/card-extraction.ts`: `@openrouter/sdk` client using `google/gemini-3.1-flash-lite`, strict structured output and server-side Zod validation. `CARD_EXTRACTION_CONFIG.models` sends Gemini first and `meta/muse-spark-1.3-contributor` as a fallback. The ordered list accepts one to three `AIModel` enum values. Category suggestions must match the authenticated user’s supplied category IDs, or be null.
-- `src/server/ocr.ts` + `/api/ocr`: authenticate with `requireUser()`, enforce same-origin requests and bounded image input, orchestrate extraction, return only contact fields with no-store caching.
+- `src/services/card-extraction.ts`: `@openrouter/sdk` client using `google/gemini-3.1-flash-lite`, strict structured output and server-side Zod validation. `CARD_EXTRACTION_CONFIG.models` sends Gemini first and `z-ai/glm-5.3-flash` and `deepseek/deepseek-v4.1-flash` as fallbacks. The ordered list accepts one to three `AIModel` enum values. Category suggestions must match the authenticated user’s supplied category IDs, or be null.
+- `src/server/ocr.ts` + `/api/ocr`: authenticate the request session and return JSON 401 on expiry, enforce same-origin requests and bounded image input, orchestrate extraction, return only contact fields with no-store caching.
 - `src/services/card-autofill.ts`: prepare a small JPEG scan copy in the browser, retaining the original image for Save.
 - Form: explicit Auto-fill details button, loading feedback, empty-field-only updates, protection for concurrent edits and stale scans, non-blocking failures. Category suggestions only fill an unselected category and preserve choices made during scanning.
 - Server-only configuration: `OCR_SPACE_API_KEY` defaults to `helloworld`; `OPENROUTER_API_KEY` enables extraction. Missing AI configuration disables scanning gracefully without blocking manual entry.
@@ -350,8 +350,12 @@ Each phase has: **Goal → Tasks → Deliverables → Acceptance Criteria → Re
 **Verification:** `pnpm typecheck`, `pnpm lint`, and mocked provider tests covering the two-stage pipeline, invalid/empty output, rate limits, timeouts, image validation, and bounded request bodies. Run tests with dummy credentials (no `.env` required):
 
 ```sh
-SKIP_ENV_VALIDATION=true OPENROUTER_API_KEY=test OCR_SPACE_API_KEY=test pnpm exec tsx --test tests/ocr.test.ts
+SKIP_ENV_VALIDATION=true OPENROUTER_API_KEY=test OCR_SPACE_API_KEY=test pnpm exec tsx --test tests/*.test.ts
 ```
+
+**Review hardening:** The API shares Better Auth's trusted-origin policy, returns JSON 401 for expired sessions, surfaces safe server messages, and enforces a process-local 10-scans/minute authenticated-user quota before provider calls. This in-memory quota resets on restart and is independent per server instance; distributed deployment needs shared storage. Provider routing denies data collection and excludes the contributor model from active fallbacks. The provider schema uses portable JSON Schema keywords; strict field validation remains server-side.
+
+**Suggestion review:** The latest successful structured response stays in React memory for the selected image. Users can compare current and suggested fields, apply a single suggestion, or explicitly replace all fields that have suggestions without another provider call. Missing suggestions never clear values. Replacing/removing the image, successful save, and unmount discard the cached response. Manual edit markers persist across scans.
 
 **Remaining manual acceptance:** Scan a real clear business card with configured credentials and review the extracted details. Live provider calls are not part of the mocked test suite.
 

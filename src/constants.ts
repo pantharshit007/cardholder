@@ -109,6 +109,7 @@ export type CardSortOption = (typeof CARD_SORT_OPTIONS)[number]
 
 export const OCR_CONFIG = {
   apiPath: '/api/ocr',
+  rateLimit: { requests: 10, windowMs: 60_000, millisecondsPerSecond: 1000 },
   endpoint: 'https://api.ocr.space/parse/image',
   allowedMimeTypes: ['image/jpeg', 'image/png'],
   engine: '2',
@@ -130,9 +131,18 @@ export const OCR_CONFIG = {
 export const CARD_EXTRACTION_CONFIG = {
   models: [
     AIModel.GeminiFlashLite,
-    AIModel.MuseSparkContributor,
+    AIModel.GlmFlash,
+    AIModel.DeepSeekFlash,
   ] as const satisfies ModelFallbacks,
   timeoutMs: 30_000,
   maxTokens: 1024,
   autofillTimeoutMs: 75_000,
 } as const
+
+export const AUTOFILL_FIELDS = [
+  { key: 'name', label: 'Contact name' },
+  { key: 'company', label: 'Company' },
+  { key: 'phone', label: 'Phone' },
+  { key: 'email', label: 'Email' },
+  { key: 'categoryId', label: 'Category' },
+] as const

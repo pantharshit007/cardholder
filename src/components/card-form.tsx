@@ -16,6 +16,8 @@ import {
 import { useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
 
+import { CardAutofillSuggestions } from '@/components/card-autofill-suggestions'
+import { autofillValue } from '@/utils/autofill-value'
 import { Button } from '@/components/ui/button'
 import {
   Field,
@@ -50,6 +52,7 @@ import { autofillCardFromImage } from '@/services/card-autofill'
 import type { ExtractedCard } from '@/types/ocr'
 import { categoryStripeColor } from '@/utils/category-color'
 
+/** Create or edit a card with optional, reviewable image-based suggestions. */
 export function CardForm({
   card,
   categories,
@@ -88,38 +91,26 @@ export function CardForm({
   const scanRef = useRef<AbortController | null>(null)
   const editedFieldsRef = useRef(new Set<keyof ExtractedCard>())
   const [isScanning, setIsScanning] = useState(false)
+  const [suggestions, setSuggestions] = useState<ExtractedCard | null>(null)
 
+  /** Prevent a pending response from changing a replaced or submitted form. */
   function cancelScan() {
     scanRef.current?.abort()
     scanRef.current = null
     setIsScanning(false)
   }
 
+  /** Cache the latest successful scan and apply suggestions only to untouched empty fields. */
   async function handleAutofill() {
     if (!imageFile || isBusy || scanRef.current) return
     const controller = new AbortController()
     scanRef.current = controller
-    editedFieldsRef.current.clear()
     setIsScanning(true)
     try {
       const fields = await autofillCardFromImage(imageFile, controller.signal)
       if (controller.signal.aborted) return
-      const apply = (field: keyof ExtractedCard, current: string) =>
-        current.trim() || editedFieldsRef.current.has(field)
-          ? current
-          : (fields[field] ?? current)
-      setName((current) => apply('name', current))
-      setPhone((current) => apply('phone', current))
-      setEmail((current) => apply('email', current))
-      setCompany((current) => apply('company', current))
-      setCategoryId((current) =>
-        current !== 'none' || editedFieldsRef.current.has('categoryId')
-          ? current
-          : fields.categoryId &&
-              categories.some((category) => category.id === fields.categoryId)
-            ? fields.categoryId
-            : current,
-      )
+      setSuggestions(fields)
+      applySuggestions(fields)
       if (Object.values(fields).some(Boolean)) {
         toast.success('Scan complete. Review the details before saving.')
       } else {
@@ -127,10 +118,12 @@ export function CardForm({
           'No contact details found. Try a clearer photo or enter them manually.',
         )
       }
-    } catch {
+    } catch (error) {
       if (!controller.signal.aborted) {
         toast.error(
-          'Could not scan this card. Try again or enter the details manually.',
+          error instanceof Error
+            ? error.message
+            : 'Could not scan this card. Try again or enter the details manually.',
         )
       }
     } finally {
@@ -139,6 +132,47 @@ export function CardForm({
         setIsScanning(false)
       }
     }
+  }
+
+  /** Apply cached data automatically or after an explicit per-field/all-fields choice. */
+  function applySuggestions(
+    fields: ExtractedCard,
+    explicit = false,
+    selected?: keyof ExtractedCard,
+  ) {
+    const edited = new Set(editedFieldsRef.current)
+    const apply = (field: keyof ExtractedCard, current: string) => {
+      if (selected && selected !== field) return current
+      if (
+        field === 'categoryId' &&
+        !categories.some((category) => category.id === fields.categoryId)
+      )
+        return current
+      return autofillValue(
+        field,
+        current,
+        fields[field],
+        edited.has(field),
+        explicit,
+      )
+    }
+    setName((current) => apply('name', current))
+    setPhone((current) => apply('phone', current))
+    setEmail((current) => apply('email', current))
+    setCompany((current) => apply('company', current))
+    setCategoryId((current) => apply('categoryId', current))
+    if (
+      (!selected || selected === 'name') &&
+      fields.name &&
+      (explicit || (!name.trim() && !edited.has('name')))
+    )
+      setNameError(undefined)
+    if (
+      (!selected || selected === 'email') &&
+      fields.email &&
+      (explicit || (!email.trim() && !edited.has('email')))
+    )
+      setEmailError(undefined)
   }
 
   // Status
@@ -160,6 +194,7 @@ export function CardForm({
     [],
   )
 
+  /** Release the previous local image preview. */
   function revokePreviewObjectUrl() {
     if (previewObjectUrlRef.current) {
       URL.revokeObjectURL(previewObjectUrlRef.current)
@@ -167,10 +202,12 @@ export function CardForm({
     }
   }
 
+  /** Validate and preview a replacement image, discarding stale scan suggestions. */
   function handleFileSelect(file: File) {
     try {
       validateImageFile(file)
       cancelScan()
+      setSuggestions(null)
       revokePreviewObjectUrl()
       const objectUrl = URL.createObjectURL(file)
       previewObjectUrlRef.current = objectUrl
@@ -185,6 +222,7 @@ export function CardForm({
     }
   }
 
+  /** Accept the first dropped image when the form is editable. */
   function handleDrop(e: React.DragEvent<HTMLElement>) {
     e.preventDefault()
     setIsDragging(false)
@@ -196,8 +234,10 @@ export function CardForm({
     }
   }
 
+  /** Clear the preview and suggestions and mark a saved image for removal. */
   function handleRemoveImage() {
     cancelScan()
+    setSuggestions(null)
     revokePreviewObjectUrl()
     setImageFile(null)
     setPreviewUrl(null)
@@ -207,6 +247,7 @@ export function CardForm({
     }
   }
 
+  /** Validate manual data, upload the original image, and save the card. */
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (isBusy) return
@@ -303,6 +344,7 @@ export function CardForm({
       return
     }
 
+    setSuggestions(null)
     toast.success(
       `${isEditing ? 'Updated' : 'Created'} card for ${result.data.name}.`,
     )
@@ -325,6 +367,7 @@ export function CardForm({
     }
   }
 
+  /** Clean up an uploaded image if saving its card fails. */
   async function discardUnusedUpload(imageUploadId: string) {
     try {
       await discardCardUploadFn({ data: { id: imageUploadId } })
@@ -433,6 +476,22 @@ export function CardForm({
                 : 'Fills empty fields only. Review before saving.'}
             </p>
           </div>
+        ) : null}
+
+        {suggestions ? (
+          <CardAutofillSuggestions
+            suggestions={suggestions}
+            current={{
+              name,
+              phone,
+              email,
+              company,
+              categoryId: categoryId === 'none' ? null : categoryId,
+            }}
+            categories={categories}
+            disabled={isBusy || isScanning}
+            onApply={(field) => applySuggestions(suggestions, true, field)}
+          />
         ) : null}
 
         <input

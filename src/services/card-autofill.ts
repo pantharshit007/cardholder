@@ -1,7 +1,8 @@
 import { CARD_EXTRACTION_CONFIG, OCR_CONFIG } from '@/constants'
-import { extractedCardSchema } from '@/lib/validators/ocr'
+import { readAutofillResponse } from '@/services/autofill-response'
 import type { ExtractedCard } from '@/types/ocr'
 
+/** Encode a scan-sized JPEG while leaving the original upload untouched. */
 async function prepareScanImage(file: File): Promise<Blob> {
   const bitmap = await createImageBitmap(file)
   try {
@@ -34,6 +35,7 @@ async function prepareScanImage(file: File): Promise<Blob> {
   }
 }
 
+/** Submit the prepared image with cancellation and parse the API result. */
 export async function autofillCardFromImage(
   file: File,
   signal: AbortSignal,
@@ -50,9 +52,5 @@ export async function autofillCardFromImage(
       AbortSignal.timeout(CARD_EXTRACTION_CONFIG.autofillTimeoutMs),
     ]),
   })
-  if (!response.ok)
-    throw new Error(
-      'Could not scan this card. Try again or enter the details manually.',
-    )
-  return extractedCardSchema.parse(await response.json())
+  return readAutofillResponse(response)
 }

@@ -132,6 +132,7 @@ export async function deleteCategoryForUser(input: {
   return deleted ? toCategoryRecord(deleted) : null
 }
 
+/** Return only the authenticated user’s category IDs and labels for extraction. */
 export async function listCategoriesForExtraction(userId: string) {
   return db
     .select({ id: categories.id, name: categories.name })

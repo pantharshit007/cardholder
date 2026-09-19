@@ -2,6 +2,7 @@ import { OCR_CONFIG } from '@/constants'
 import { env } from '@/env'
 import { ocrResponseSchema, ocrTextSchema } from '@/lib/validators/ocr'
 
+/** Read transient OCR text from a bounded image without persisting it. */
 export async function ocrFromImage(file: Blob): Promise<string> {
   const body = new FormData()
   body.set('file', file, file.type === 'image/png' ? 'card.png' : 'card.jpg')

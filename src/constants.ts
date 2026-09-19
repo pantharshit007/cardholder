@@ -1,3 +1,6 @@
+import { AIModel } from '@/types/ai'
+import type { ModelFallbacks } from '@/types/ai'
+
 export const APP_NAME = 'CardHolder'
 
 export const DEV_SERVER_PORT = 3000
@@ -103,3 +106,57 @@ export const CARD_SORT_OPTIONS = [
 ] as const
 
 export type CardSortOption = (typeof CARD_SORT_OPTIONS)[number]
+
+export const OCR_CONFIG = {
+  apiPath: '/api/ocr',
+  rateLimit: { requests: 10, windowMs: 60_000, millisecondsPerSecond: 1000 },
+  endpoint: 'https://api.ocr.space/parse/image',
+  allowedMimeTypes: ['image/jpeg', 'image/png'],
+  engine: '2',
+  language: 'eng',
+  timeoutMs: 30_000,
+  maxImageBytes: 1_000_000,
+  get maxRequestBytes() {
+    return this.maxImageBytes + MULTIPART_OVERHEAD_BYTES
+  },
+  maxTextLength: 20_000,
+  image: {
+    maxDimension: 2000,
+    quality: 0.85,
+    resizeFactor: 0.8,
+    resizeAttempts: 6,
+  },
+} as const
+
+export const CARD_EXTRACTION_CONFIG = {
+  models: [
+    AIModel.GeminiFlashLite,
+    AIModel.GlmFlash,
+    AIModel.DeepSeekFlash,
+  ] as const satisfies ModelFallbacks,
+  timeoutMs: 30_000,
+  maxTokens: 1024,
+  autofillTimeoutMs: 75_000,
+} as const
+
+export const AUTOFILL_FIELDS = [
+  { key: 'name', label: 'Contact name' },
+  { key: 'company', label: 'Company' },
+  { key: 'phone', label: 'Phone' },
+  { key: 'email', label: 'Email' },
+  { key: 'categoryId', label: 'Category' },
+] as const
+
+export const IMAGE_UPLOAD_ERRORS = {
+  saveFailed: 'Could not save the image upload. Please try again.',
+  providerFailed:
+    'The image service could not upload your image. Please try again.',
+  networkFailed:
+    'Could not reach the server. Check your connection and try again.',
+  invalidImage:
+    'Please choose a JPEG, PNG, or WebP image within the upload size limit.',
+  unauthorized: 'Your session has expired. Please sign in again.',
+  tooLarge: 'The image upload is too large. Please choose a smaller image.',
+  unavailable:
+    'Image upload is temporarily unavailable. Please try again later.',
+} as const

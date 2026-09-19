@@ -14,6 +14,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
 import { Route as AuthenticatedCategoriesRouteImport } from './routes/_authenticated/categories'
+import { Route as ApiOcrRouteImport } from './routes/api/ocr'
 import { Route as ApiUploadRouteImport } from './routes/api/upload'
 import { Route as AuthenticatedCardsIndexRouteImport } from './routes/_authenticated/cards/index'
 import { Route as AuthenticatedCardsNewRouteImport } from './routes/_authenticated/cards/new'
@@ -44,6 +45,11 @@ const AuthenticatedCategoriesRoute = AuthenticatedCategoriesRouteImport.update({
   id: '/categories',
   path: '/categories',
   getParentRoute: () => AuthenticatedRoute,
+} as any)
+const ApiOcrRoute = ApiOcrRouteImport.update({
+  id: '/api/ocr',
+  path: '/api/ocr',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ApiUploadRoute = ApiUploadRouteImport.update({
   id: '/api/upload',
@@ -83,6 +89,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
   '/categories': typeof AuthenticatedCategoriesRoute
+  '/api/ocr': typeof ApiOcrRoute
   '/api/upload': typeof ApiUploadRoute
   '/cards/new': typeof AuthenticatedCardsNewRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -94,6 +101,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
   '/categories': typeof AuthenticatedCategoriesRoute
+  '/api/ocr': typeof ApiOcrRoute
   '/api/upload': typeof ApiUploadRoute
   '/': typeof AuthenticatedIndexRoute
   '/cards/new': typeof AuthenticatedCardsNewRoute
@@ -108,6 +116,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
   '/_authenticated/categories': typeof AuthenticatedCategoriesRoute
+  '/api/ocr': typeof ApiOcrRoute
   '/api/upload': typeof ApiUploadRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/cards/new': typeof AuthenticatedCardsNewRoute
@@ -123,6 +132,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/signup'
     | '/categories'
+    | '/api/ocr'
     | '/api/upload'
     | '/cards/new'
     | '/api/auth/$'
@@ -134,6 +144,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/signup'
     | '/categories'
+    | '/api/ocr'
     | '/api/upload'
     | '/'
     | '/cards/new'
@@ -147,6 +158,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/signup'
     | '/_authenticated/categories'
+    | '/api/ocr'
     | '/api/upload'
     | '/_authenticated/'
     | '/_authenticated/cards/new'
@@ -160,6 +172,7 @@ export interface RootRouteChildren {
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   LoginRoute: typeof LoginRoute
   SignupRoute: typeof SignupRoute
+  ApiOcrRoute: typeof ApiOcrRoute
   ApiUploadRoute: typeof ApiUploadRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
 }
@@ -200,6 +213,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/categories'
       preLoaderRoute: typeof AuthenticatedCategoriesRouteImport
       parentRoute: typeof AuthenticatedRoute
+    }
+    '/api/ocr': {
+      id: '/api/ocr'
+      path: '/api/ocr'
+      fullPath: '/api/ocr'
+      preLoaderRoute: typeof ApiOcrRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/upload': {
       id: '/api/upload'
@@ -272,6 +292,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   LoginRoute: LoginRoute,
   SignupRoute: SignupRoute,
+  ApiOcrRoute: ApiOcrRoute,
   ApiUploadRoute: ApiUploadRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
 }

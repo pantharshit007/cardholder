@@ -1,3 +1,5 @@
+import type { AutofillStage } from '@/types/autofill-error'
+import { describeAutofillError } from '@/utils/autofill-error'
 import { OCR_CONFIG } from '@/constants'
 import { env } from '@/env'
 import { auth } from '@/lib/auth'
@@ -7,10 +9,7 @@ import { ocrImageSchema } from '@/lib/validators/ocr'
 import { extractCardFromText } from '@/services/card-extraction'
 import { listCategoriesForExtraction } from '@/services/category.service'
 import { ocrFromImage } from '@/services/ocr'
-import {
-  readFormDataWithLimit,
-  RequestBodyTooLargeError,
-} from '@/utils/request-body'
+import { readFormDataWithLimit } from '@/utils/request-body'
 
 /** Authenticate, limit, and validate scans before calling either external provider. */
 export async function handleCardAutofill(request: Request): Promise<Response> {
@@ -52,6 +51,7 @@ export async function handleCardAutofill(request: Request): Promise<Response> {
         headers: { ...headers, 'Retry-After': String(quota.retryAfter) },
       },
     )
+  let stage: AutofillStage = 'upload'
   try {
     const form = await readFormDataWithLimit(
       request,
@@ -64,20 +64,23 @@ export async function handleCardAutofill(request: Request): Promise<Response> {
         { status: 400, headers },
       )
     }
+    stage = 'ocr'
     const text = await ocrFromImage(parsed.data)
+    stage = 'categories'
     const categories = await listCategoriesForExtraction(user.id)
+    stage = 'extraction'
     const data = await extractCardFromText(text, categories)
     return Response.json(data, { headers })
   } catch (error) {
+    const failure = describeAutofillError(error, stage)
+    console.warn('Card autofill failed', {
+      stage: failure.stage,
+      reason: failure.reason,
+      upstreamStatus: failure.upstreamStatus,
+    })
     return Response.json(
-      {
-        message:
-          'Could not scan this card. Try a clearer image or enter the details manually.',
-      },
-      {
-        status: error instanceof RequestBodyTooLargeError ? 413 : 502,
-        headers,
-      },
+      { message: failure.message, stage: failure.stage, code: failure.reason },
+      { status: failure.status, headers },
     )
   }
 }

@@ -17,7 +17,10 @@ export async function ocrFromImage(file: Blob): Promise<string> {
     body,
     signal: AbortSignal.timeout(OCR_CONFIG.timeoutMs),
   })
-  if (!response.ok) throw new Error('OCR request failed.')
+  if (!response.ok)
+    throw Object.assign(new Error('OCR request failed.'), {
+      statusCode: response.status,
+    })
   const result = ocrResponseSchema.parse(await response.json())
   if (result.IsErroredOnProcessing || ![1, 2].includes(result.OCRExitCode)) {
     throw new Error('OCR could not read this image.')

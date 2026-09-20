@@ -1,6 +1,24 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 
+import {
+  APP_CONFIG,
+  APP_NAME,
+  AUTH_CONFIG,
+  AUTH_PASSWORD_MIN_LENGTH,
+  CARD_CONFIG,
+  CARD_NAME_MIN_LENGTH,
+  CATEGORY_CONFIG,
+  CATEGORY_NAME_MIN_LENGTH,
+  DB_CONFIG,
+  DB_DRIVERS,
+  IMAGE_UPLOAD_CONFIG,
+  MAX_IMAGE_BYTES,
+  NAV_PATHS,
+  LOGIN_PATH,
+  STORAGE_KEYS,
+  THEME_STORAGE_KEY,
+} from '@/constants'
 import { createCardSchema, updateCardSchema } from '@/lib/validators/card'
 import { createExtractionJsonSchema } from '@/lib/validators/extraction-schema'
 import { extractedCardSchema } from '@/lib/validators/ocr'
@@ -80,4 +98,15 @@ test('extraction schemas include location for AI structured autofill', () => {
     categoryId: null,
   })
   assert.equal(parsed.location, 'Portland, OR')
+})
+
+test('cohesive configuration objects group related standalone constants', () => {
+  assert.equal(APP_NAME, APP_CONFIG.name)
+  assert.equal(LOGIN_PATH, NAV_PATHS.login)
+  assert.equal(AUTH_PASSWORD_MIN_LENGTH, AUTH_CONFIG.passwordMinLength)
+  assert.equal(THEME_STORAGE_KEY, STORAGE_KEYS.theme)
+  assert.deepEqual(DB_DRIVERS, DB_CONFIG.drivers)
+  assert.equal(CATEGORY_NAME_MIN_LENGTH, CATEGORY_CONFIG.nameMinLength)
+  assert.equal(CARD_NAME_MIN_LENGTH, CARD_CONFIG.nameMinLength)
+  assert.equal(MAX_IMAGE_BYTES, IMAGE_UPLOAD_CONFIG.maxSizeBytes)
 })

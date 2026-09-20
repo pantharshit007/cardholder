@@ -9,7 +9,7 @@ This repo is built **phase by phase** from `PLAN.md`. Phase 4 adds user-scoped c
 - **Package manager:** pnpm (do not use npm or yarn)
 - **Lint / format:** ESLint + Prettier (official TanStack Start toolchain, not Biome)
 - **Env:** t3-env (`src/env.ts`) — never read `process.env` / `import.meta.env` in app code
-- **Database:** Docker Postgres in development; Neon (HTTP driver) in production. Schema via Drizzle.
+- **Database:** Docker Postgres in development; Neon in production. Schema via Drizzle. Card mutations require a transaction-capable driver (see below).
 
 ## Setup
 
@@ -36,6 +36,18 @@ The shared Drizzle client in `src/db/index.ts` selects:
 
 - **`pg`** (node-postgres) when `NODE_ENV` is not `production` (or `DB_DRIVER=pg`)
 - **Neon HTTP** when `NODE_ENV=production` (or `DB_DRIVER=neon`)
+
+For production on a Node.js host, explicitly set `DB_DRIVER=pg` and keep the
+Neon pooled `DATABASE_URL`, including its SSL parameters. Redeploy after changing
+the environment variable. The `pg` driver works with Neon as well as local Postgres.
+
+Card creation, editing, deletion, and discarded-upload cleanup use interactive
+transactions. The Neon HTTP adapter cannot run these and throws
+`No transactions support in neon-http driver`. The production default above
+therefore needs the `DB_DRIVER=pg` override for these operations. Do not remove
+the transactions: they keep card changes, image claims, and cleanup jobs atomic.
+Edge runtimes without TCP support need a transaction-capable adapter before
+deployment; this override is for Node.js hosting.
 
 ```bash
 pnpm db:up        # docker compose up -d

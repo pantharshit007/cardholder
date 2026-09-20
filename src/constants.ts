@@ -2,6 +2,7 @@ import { AIModel } from '@/types/ai'
 import type { ModelFallbacks } from '@/types/ai'
 
 export const APP_NAME = 'CardHolder'
+export const GITHUB_REPO_URL = 'https://github.com/pantharshit007/cardholder'
 
 export const DEV_SERVER_PORT = 3000
 

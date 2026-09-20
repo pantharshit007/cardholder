@@ -2,7 +2,8 @@ import type { AutofillStage } from '@/types/error'
 import { describeAutofillError } from '@/utils/error'
 import { OCR_CONFIG } from '@/constants'
 import { env } from '@/env'
-import { auth } from '@/lib/auth'
+import { getRequestSession } from '@/lib/session'
+import { emailVerificationFailure } from '@/lib/verified-user'
 import { consumeOcrQuota } from '@/lib/ocr-rate-limit'
 import { getTrustedOrigins } from '@/utils/trusted-origins'
 import { ocrImageSchema } from '@/lib/validators/ocr'
@@ -13,7 +14,7 @@ import { readFormDataWithLimit } from '@/utils/request-body'
 
 /** Authenticate, limit, and validate scans before calling either external provider. */
 export async function handleCardAutofill(request: Request): Promise<Response> {
-  const session = await auth.api.getSession({ headers: request.headers })
+  const session = await getRequestSession(request.headers)
   const user = session?.user
   const headers = { 'Cache-Control': 'no-store' }
   if (!user)
@@ -21,6 +22,9 @@ export async function handleCardAutofill(request: Request): Promise<Response> {
       { message: 'Your session has expired. Please sign in again.' },
       { status: 401, headers },
     )
+  const verificationFailure = emailVerificationFailure(user)
+  if (verificationFailure) return verificationFailure
+
   // Only trusted-origin browser requests may initiate paid extraction.
   const origin = request.headers.get('origin')
   if (

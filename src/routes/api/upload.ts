@@ -11,7 +11,8 @@ import {
   MAX_UPLOAD_REQUEST_BYTES,
 } from '@/constants'
 import { env } from '@/env'
-import { auth } from '@/lib/auth'
+import { getRequestSession } from '@/lib/session'
+import { emailVerificationFailure } from '@/lib/verified-user'
 import { createCardImageUploadForUser } from '@/services/card-upload.service'
 import { deleteCloudinaryImage } from '@/services/cloudinary'
 import { readFormDataWithLimit } from '@/utils/request-body'
@@ -20,9 +21,7 @@ export const Route = createFileRoute('/api/upload')({
   server: {
     handlers: {
       POST: async ({ request }: { request: Request }) => {
-        const session = await auth.api.getSession({
-          headers: request.headers,
-        })
+        const session = await getRequestSession(request.headers)
         if (!session?.user) {
           return new Response(JSON.stringify({ message: 'Unauthorized' }), {
             status: 401,
@@ -32,6 +31,9 @@ export const Route = createFileRoute('/api/upload')({
             },
           })
         }
+
+        const verificationFailure = emailVerificationFailure(session.user)
+        if (verificationFailure) return verificationFailure
 
         let stage: ImageUploadStage = 'input'
         try {

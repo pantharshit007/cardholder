@@ -1,3 +1,4 @@
+import { requireVerifiedEmail } from '@/lib/verified-user'
 import { createFileRoute, redirect } from '@tanstack/react-router'
 
 import { LandingPage } from '@/components/landing-page'
@@ -8,6 +9,7 @@ export const Route = createFileRoute('/')({
   beforeLoad: async () => {
     const session = await fetchSession()
     if (session?.user) {
+      requireVerifiedEmail(session.user)
       throw redirect({ to: CARDS_PATH })
     }
   },

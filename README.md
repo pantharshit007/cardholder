@@ -73,3 +73,22 @@ pnpm typecheck
 pnpm lint
 pnpm format
 ```
+
+### Maintainer approval
+
+New accounts can sign in but cannot access cards, categories, uploads, or autofill
+until `user.email_verified` is true. They see a pending-verification page with a
+status-check button. Approval is manual; no verification email is sent.
+
+Apply the migration with `pnpm db:migrate` before deploying this change. Bootstrap
+one trusted maintainer using Drizzle Studio (`pnpm db:studio`) or your database
+console: set **both** `is_admin = true` and `email_verified = true` on that user's
+row. Existing users with `email_verified = false` will also need approval.
+Admin privileges cannot be set through signup or profile updates.
+
+Verified admins can open `/admin` (the **Approvals** navigation link) and approve
+users. The list defaults to pending users and retrieves at most 20 visible rows
+per page using an indexed ID cursor, without a full user count or offset scan.
+Approval only changes email verification; it does not grant administrator access.
+Authorization reads fresh database session data so approval, verification
+revocation, and admin-role changes apply on the next server request.

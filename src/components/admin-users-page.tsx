@@ -49,7 +49,7 @@ export function AdminUsersPage({
           id="approval-status"
           className="rounded-md border bg-background p-2 text-sm"
           value={filters.status ?? 'pending'}
-          disabled={loading || approving !== null}
+          disabled={loading}
           onChange={(event) =>
             onFiltersChange({
               status: event.target.value as AdminUserFilter['status'],
@@ -89,7 +89,7 @@ export function AdminUsersPage({
                 ) : (
                   <Button
                     size="sm"
-                    disabled={approving !== null || loading}
+                    disabled={approving === user.id || loading}
                     onClick={() => void approve(user.id)}
                     aria-label={`Approve ${user.email}`}
                   >
@@ -104,14 +104,14 @@ export function AdminUsersPage({
       <nav aria-label="User pages" className="mt-4 flex gap-3">
         <Button
           variant="outline"
-          disabled={!filters.after || loading || approving !== null}
+          disabled={!filters.after || loading}
           onClick={() => onFiltersChange({ status: filters.status })}
         >
           First page
         </Button>
         <Button
           variant="outline"
-          disabled={!page.nextCursor || loading || approving !== null}
+          disabled={!page.nextCursor || loading}
           onClick={() => {
             if (page.nextCursor)
               onFiltersChange({ ...filters, after: page.nextCursor })

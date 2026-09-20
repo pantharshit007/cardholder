@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { after, before, test } from 'node:test'
-import { eq } from 'drizzle-orm'
+import { eq, like, or } from 'drizzle-orm'
 import { drizzle } from 'drizzle-orm/node-postgres'
 import { migrate } from 'drizzle-orm/node-postgres/migrator'
 import { Pool } from 'pg'
@@ -139,8 +139,14 @@ test('unverified sign-ins are gated and maintainer changes override cached sessi
 })
 
 test('admin directory uses bounded pages and approving a row does not skip subsequent pending users', async () => {
-  // This database is disposable and belongs to this test file.
-  await db.delete(user)
+  // Only remove rows owned by this file; the test database is shared with
+  // other integration suites (e.g. card-search, card-cleanup fixtures).
+  await db.delete(user).where(
+    or(
+      eq(user.email, 'pending@example.com'),
+      like(user.email, 'user-%@example.com'),
+    ),
+  )
   const records = Array.from(
     { length: ADMIN_CONFIG.pageSize * 2 + 1 },
     (_, index) => ({

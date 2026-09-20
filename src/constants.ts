@@ -107,6 +107,9 @@ export const FIELD_LIMITS = {
 export const CARD_CONFIG = {
   nameMinLength: 1,
   pageSize: 24,
+  maxPageSize: 100,
+  searchDebounceMs: 300,
+  searchMaxLength: 200,
   thumbnailWidth: 400,
   thumbnailHeight: 250,
   detailImageWidth: 1200,

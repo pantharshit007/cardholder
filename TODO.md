@@ -1,3 +1,2 @@
-- [x] delete the images once the card is deleted.
-- [x] Add location as a field in the card.
-- [x] Group other related standalone constants in `src/constants.ts` into cohesive configuration objects.
+- [ ] Fix the issue of all the standalone exports we have in the constant file, instead of using those, use the config we have created for the common constants for these individual ones.
+- [ ] add Ggl OAuth

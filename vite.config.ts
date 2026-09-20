@@ -2,6 +2,7 @@ import type { UserConfig } from 'vite'
 import { defineConfig, loadEnv } from 'vite'
 import { tanstackStart } from '@tanstack/react-start/plugin/vite'
 import tailwindcss from '@tailwindcss/vite'
+import { nitro } from 'nitro/vite'
 import viteReact from '@vitejs/plugin-react'
 
 const config = defineConfig(async ({ mode }): Promise<UserConfig> => {
@@ -18,7 +19,7 @@ const config = defineConfig(async ({ mode }): Promise<UserConfig> => {
 
   return {
     resolve: { tsconfigPaths: true },
-    plugins: [tailwindcss(), tanstackStart(), viteReact()],
+    plugins: [tailwindcss(), tanstackStart(), nitro(), viteReact()],
     server: {
       allowedHosts: ['.ts.net'],
     },

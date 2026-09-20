@@ -4,7 +4,7 @@ import { drizzle as drizzlePg } from 'drizzle-orm/node-postgres'
 import { Pool } from 'pg'
 
 import type { DbDriver } from '@/constants'
-import { DB_DRIVER_DEV, DB_DRIVER_PROD } from '@/constants'
+import { DB_CONFIG } from '@/constants'
 import { env } from '@/env'
 
 import * as schema from './schema'
@@ -12,7 +12,7 @@ import * as schema from './schema'
 function resolveDbDriver(): DbDriver {
   return (
     env.DB_DRIVER ??
-    (env.NODE_ENV === 'production' ? DB_DRIVER_PROD : DB_DRIVER_DEV)
+    (env.NODE_ENV === 'production' ? DB_CONFIG.prodDriver : DB_CONFIG.devDriver)
   )
 }
 

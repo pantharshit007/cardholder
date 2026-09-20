@@ -153,6 +153,7 @@ export const IMAGE_UPLOAD_CONFIG = {
   allowedMimeTypes: ['image/jpeg', 'image/png', 'image/webp'] as const,
   cloudinaryApiBaseUrl: 'https://api.cloudinary.com/v1_1',
   cloudinaryCleanupBatchSize: 10,
+  cloudinaryDeletionTimeoutMs: 10_000,
   errors: IMAGE_UPLOAD_ERRORS,
 } as const
 

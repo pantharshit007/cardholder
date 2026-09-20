@@ -290,6 +290,7 @@ export async function updateCardForUser(input: {
         .from(cards)
         .where(and(eq(cards.id, input.id), eq(cards.userId, input.userId)))
         .limit(1)
+        .for('update')
 
       if (!existing) {
         return null
@@ -369,7 +370,9 @@ export async function updateCardForUser(input: {
       }
 
       const oldPublicId =
-        existing.imagePublicId || extractPublicIdFromUrl(existing.imageUrl)
+        input.imageUploadId || input.removeImage
+          ? existing.imagePublicId || extractPublicIdFromUrl(existing.imageUrl)
+          : null
 
       if (oldPublicId && oldPublicId !== imagePublicId) {
         oldPublicIdToClean = oldPublicId

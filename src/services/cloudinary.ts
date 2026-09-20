@@ -2,6 +2,7 @@ import { imageUploadErrorMessage } from '@/utils/error'
 import {
   ALLOWED_IMAGE_MIME_TYPES,
   IMAGE_UPLOAD_ERRORS,
+  IMAGE_UPLOAD_CONFIG,
   CARD_DETAIL_IMAGE_WIDTH,
   CARD_THUMBNAIL_HEIGHT,
   CARD_THUMBNAIL_WIDTH,
@@ -222,6 +223,9 @@ export async function deleteCloudinaryImage(
       {
         method: 'POST',
         body: formData,
+        signal: AbortSignal.timeout(
+          IMAGE_UPLOAD_CONFIG.cloudinaryDeletionTimeoutMs,
+        ),
       },
     )
 

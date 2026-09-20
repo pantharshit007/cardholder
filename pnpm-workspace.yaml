@@ -1,5 +1,5 @@
 allowBuilds:
-  '@openrouter/sdk': set this to true or false
+  '@openrouter/sdk': true
   esbuild: true
   lightningcss: true
   unrs-resolver: true

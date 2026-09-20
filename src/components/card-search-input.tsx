@@ -14,7 +14,10 @@ export function CardSearchInput({
   const [draft, setDraft] = useState(value)
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const callback = useRef(onChange)
-  callback.current = onChange
+
+  useEffect(() => {
+    callback.current = onChange
+  }, [onChange])
 
   useEffect(() => {
     clearTimeout(timer.current)

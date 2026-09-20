@@ -8,6 +8,10 @@ import {
   cloudinaryCleanupJobs,
 } from '@/db/schema'
 import { discardCardImageUploadForUser } from '@/services/card-upload.service'
+import {
+  deleteCloudinaryImage,
+  extractPublicIdFromUrl,
+} from '@/services/cloudinary'
 import { processCloudinaryCleanupJobs } from '@/services/cloudinary-cleanup.service'
 import type {
   Card,
@@ -37,7 +41,10 @@ export async function listCardsForUser(
       or(
         ilike(cards.name, pattern),
         ilike(cards.phone, pattern),
+        ilike(cards.email, pattern),
         ilike(cards.company, pattern),
+        ilike(cards.location, pattern),
+        ilike(cards.notes, pattern),
       )!,
     )
   }
@@ -59,6 +66,7 @@ export async function listCardsForUser(
       phone: cards.phone,
       email: cards.email,
       company: cards.company,
+      location: cards.location,
       notes: cards.notes,
       categoryId: cards.categoryId,
       categoryName: categories.name,
@@ -80,6 +88,7 @@ export async function listCardsForUser(
     phone: row.phone,
     email: row.email,
     company: row.company,
+    location: row.location,
     notes: row.notes,
     categoryId: row.categoryId,
     categoryName: row.categoryName,
@@ -103,6 +112,7 @@ export async function getCardForUser(
       phone: cards.phone,
       email: cards.email,
       company: cards.company,
+      location: cards.location,
       notes: cards.notes,
       categoryId: cards.categoryId,
       categoryName: categories.name,
@@ -128,6 +138,7 @@ export async function getCardForUser(
     phone: row.phone,
     email: row.email,
     company: row.company,
+    location: row.location,
     notes: row.notes,
     categoryId: row.categoryId,
     categoryName: row.categoryName,
@@ -145,6 +156,7 @@ export async function createCardForUser(input: {
   phone?: string | null
   email?: string | null
   company?: string | null
+  location?: string | null
   notes?: string | null
   categoryId?: string | null
   imageUploadId?: string | null
@@ -203,6 +215,7 @@ export async function createCardForUser(input: {
           phone: input.phone ?? null,
           email: input.email ?? null,
           company: input.company ?? null,
+          location: input.location ?? null,
           notes: input.notes ?? null,
           categoryId: input.categoryId ?? null,
           imageUrl: upload?.imageUrl ?? null,
@@ -254,15 +267,20 @@ export async function updateCardForUser(input: {
   phone?: string | null
   email?: string | null
   company?: string | null
+  location?: string | null
   notes?: string | null
   categoryId?: string | null
   imageUploadId?: string | null
   removeImage?: boolean
 }): Promise<CardRecord | null> {
-  let updatedRecord: CardRecord | null
+  let txResult: {
+    record: CardRecord
+    oldPublicIdToClean: string | null
+  } | null = null
 
   try {
-    updatedRecord = await db.transaction(async (tx) => {
+    txResult = await db.transaction(async (tx) => {
+      let oldPublicIdToClean: string | null = null
       const [existing] = await tx
         .select({
           id: cards.id,
@@ -337,6 +355,7 @@ export async function updateCardForUser(input: {
           phone: input.phone ?? null,
           email: input.email ?? null,
           company: input.company ?? null,
+          location: input.location ?? null,
           notes: input.notes ?? null,
           categoryId: input.categoryId ?? null,
           imageUrl,
@@ -349,11 +368,24 @@ export async function updateCardForUser(input: {
         return null
       }
 
-      if (existing.imagePublicId && existing.imagePublicId !== imagePublicId) {
+      const oldPublicId =
+        existing.imagePublicId || extractPublicIdFromUrl(existing.imageUrl)
+
+      if (oldPublicId && oldPublicId !== imagePublicId) {
+        oldPublicIdToClean = oldPublicId
         await tx
           .insert(cloudinaryCleanupJobs)
-          .values({ imagePublicId: existing.imagePublicId })
+          .values({ imagePublicId: oldPublicId })
           .onConflictDoNothing({ target: cloudinaryCleanupJobs.imagePublicId })
+
+        await tx
+          .delete(cardImageUploads)
+          .where(
+            and(
+              eq(cardImageUploads.userId, input.userId),
+              eq(cardImageUploads.imagePublicId, oldPublicId),
+            ),
+          )
       }
 
       if (input.imageUploadId) {
@@ -374,7 +406,10 @@ export async function updateCardForUser(input: {
         }
       }
 
-      return toCardRecord(updated, selectedCategory)
+      return {
+        record: toCardRecord(updated, selectedCategory),
+        oldPublicIdToClean,
+      }
     })
   } catch (error) {
     if (input.imageUploadId) {
@@ -386,7 +421,7 @@ export async function updateCardForUser(input: {
     throw error
   }
 
-  if (!updatedRecord) {
+  if (!txResult) {
     if (input.imageUploadId) {
       await discardUploadAfterFailedPersistence(
         input.userId,
@@ -396,9 +431,28 @@ export async function updateCardForUser(input: {
     return null
   }
 
+  const { record, oldPublicIdToClean } = txResult
+
+  if (oldPublicIdToClean) {
+    try {
+      const deletedFromCloudinary =
+        await deleteCloudinaryImage(oldPublicIdToClean)
+      if (deletedFromCloudinary) {
+        await db
+          .delete(cloudinaryCleanupJobs)
+          .where(eq(cloudinaryCleanupJobs.imagePublicId, oldPublicIdToClean))
+      }
+    } catch (error) {
+      console.warn(
+        'Direct Cloudinary image deletion failed on card update; queued for cleanup:',
+        error,
+      )
+    }
+  }
+
   await processCleanupBestEffort()
 
-  return updatedRecord
+  return record
 }
 
 export async function deleteCardForUser(input: {
@@ -410,9 +464,15 @@ export async function deleteCardForUser(input: {
     return null
   }
 
+  const targetPublicId =
+    existing.imagePublicId || extractPublicIdFromUrl(existing.imageUrl)
+
   const deleted = await db.transaction(async (tx) => {
     const [current] = await tx
-      .select({ imagePublicId: cards.imagePublicId })
+      .select({
+        imagePublicId: cards.imagePublicId,
+        imageUrl: cards.imageUrl,
+      })
       .from(cards)
       .where(and(eq(cards.id, input.id), eq(cards.userId, input.userId)))
       .limit(1)
@@ -422,11 +482,25 @@ export async function deleteCardForUser(input: {
       return false
     }
 
-    if (current.imagePublicId) {
+    const publicId =
+      current.imagePublicId ||
+      extractPublicIdFromUrl(current.imageUrl) ||
+      targetPublicId
+
+    if (publicId) {
       await tx
         .insert(cloudinaryCleanupJobs)
-        .values({ imagePublicId: current.imagePublicId })
+        .values({ imagePublicId: publicId })
         .onConflictDoNothing({ target: cloudinaryCleanupJobs.imagePublicId })
+
+      await tx
+        .delete(cardImageUploads)
+        .where(
+          and(
+            eq(cardImageUploads.userId, input.userId),
+            eq(cardImageUploads.imagePublicId, publicId),
+          ),
+        )
     }
 
     await tx
@@ -438,6 +512,22 @@ export async function deleteCardForUser(input: {
 
   if (!deleted) {
     return null
+  }
+
+  if (targetPublicId) {
+    try {
+      const deletedFromCloudinary = await deleteCloudinaryImage(targetPublicId)
+      if (deletedFromCloudinary) {
+        await db
+          .delete(cloudinaryCleanupJobs)
+          .where(eq(cloudinaryCleanupJobs.imagePublicId, targetPublicId))
+      }
+    } catch (error) {
+      console.warn(
+        'Direct Cloudinary image deletion failed on card delete; remaining queued for cleanup:',
+        error,
+      )
+    }
   }
 
   await processCleanupBestEffort()
@@ -475,6 +565,7 @@ function toCardRecord(
     phone: card.phone,
     email: card.email,
     company: card.company,
+    location: card.location,
     notes: card.notes,
     categoryId: card.categoryId,
     categoryName: category?.name ?? null,

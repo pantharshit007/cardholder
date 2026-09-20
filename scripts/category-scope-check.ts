@@ -116,7 +116,9 @@ async function main() {
   })
 
   if (failed.length > 0) {
-    throw new Error(`Scope check failed: ${failed.map(([key]) => key).join(', ')}`)
+    throw new Error(
+      `Scope check failed: ${failed.map(([key]) => key).join(', ')}`,
+    )
   }
 }
 

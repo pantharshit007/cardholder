@@ -26,6 +26,7 @@ export const extractedCardSchema = z
     email: z
       .union([z.string().trim().email().max(FIELD_LIMITS.email), z.literal('')])
       .nullable(),
+    location: z.string().trim().max(FIELD_LIMITS.location).nullable(),
     categoryId: z.string().uuid().nullable(),
     company: z.string().trim().max(FIELD_LIMITS.company).nullable(),
   })

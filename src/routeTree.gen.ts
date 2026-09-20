@@ -9,10 +9,10 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as SignupRouteImport } from './routes/signup'
-import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
 import { Route as AuthenticatedCategoriesRouteImport } from './routes/_authenticated/categories'
 import { Route as ApiOcrRouteImport } from './routes/api/ocr'
 import { Route as ApiUploadRouteImport } from './routes/api/upload'
@@ -22,6 +22,11 @@ import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as AuthenticatedCardsIdIndexRouteImport } from './routes/_authenticated/cards/$id/index'
 import { Route as AuthenticatedCardsIdEditRouteImport } from './routes/_authenticated/cards/$id/edit'
 
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedRoute = AuthenticatedRouteImport.update({
   id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
@@ -35,11 +40,6 @@ const SignupRoute = SignupRouteImport.update({
   id: '/signup',
   path: '/signup',
   getParentRoute: () => rootRouteImport,
-} as any)
-const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedCategoriesRoute = AuthenticatedCategoriesRouteImport.update({
   id: '/categories',
@@ -85,7 +85,7 @@ const AuthenticatedCardsIdEditRoute =
   } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof AuthenticatedIndexRoute
+  '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
   '/categories': typeof AuthenticatedCategoriesRoute
@@ -98,12 +98,12 @@ export interface FileRoutesByFullPath {
   '/cards/$id/': typeof AuthenticatedCardsIdIndexRoute
 }
 export interface FileRoutesByTo {
+  '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
   '/categories': typeof AuthenticatedCategoriesRoute
   '/api/ocr': typeof ApiOcrRoute
   '/api/upload': typeof ApiUploadRoute
-  '/': typeof AuthenticatedIndexRoute
   '/cards/new': typeof AuthenticatedCardsNewRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/cards': typeof AuthenticatedCardsIndexRoute
@@ -112,13 +112,13 @@ export interface FileRoutesByTo {
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
+  '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
   '/_authenticated/categories': typeof AuthenticatedCategoriesRoute
   '/api/ocr': typeof ApiOcrRoute
   '/api/upload': typeof ApiUploadRoute
-  '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/cards/new': typeof AuthenticatedCardsNewRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/_authenticated/cards/': typeof AuthenticatedCardsIndexRoute
@@ -141,12 +141,12 @@ export interface FileRouteTypes {
     | '/cards/$id/'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/'
     | '/login'
     | '/signup'
     | '/categories'
     | '/api/ocr'
     | '/api/upload'
-    | '/'
     | '/cards/new'
     | '/api/auth/$'
     | '/cards'
@@ -154,13 +154,13 @@ export interface FileRouteTypes {
     | '/cards/$id'
   id:
     | '__root__'
+    | '/'
     | '/_authenticated'
     | '/login'
     | '/signup'
     | '/_authenticated/categories'
     | '/api/ocr'
     | '/api/upload'
-    | '/_authenticated/'
     | '/_authenticated/cards/new'
     | '/api/auth/$'
     | '/_authenticated/cards/'
@@ -169,6 +169,7 @@ export interface FileRouteTypes {
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
+  IndexRoute: typeof IndexRoute
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   LoginRoute: typeof LoginRoute
   SignupRoute: typeof SignupRoute
@@ -179,6 +180,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated': {
       id: '/_authenticated'
       path: ''
@@ -199,13 +207,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/signup'
       preLoaderRoute: typeof SignupRouteImport
       parentRoute: typeof rootRouteImport
-    }
-    '/_authenticated/': {
-      id: '/_authenticated/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof AuthenticatedIndexRouteImport
-      parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/categories': {
       id: '/_authenticated/categories'
@@ -268,7 +269,6 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteChildren {
   AuthenticatedCategoriesRoute: typeof AuthenticatedCategoriesRoute
-  AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
   AuthenticatedCardsNewRoute: typeof AuthenticatedCardsNewRoute
   AuthenticatedCardsIndexRoute: typeof AuthenticatedCardsIndexRoute
   AuthenticatedCardsIdEditRoute: typeof AuthenticatedCardsIdEditRoute
@@ -277,7 +277,6 @@ interface AuthenticatedRouteChildren {
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedCategoriesRoute: AuthenticatedCategoriesRoute,
-  AuthenticatedIndexRoute: AuthenticatedIndexRoute,
   AuthenticatedCardsNewRoute: AuthenticatedCardsNewRoute,
   AuthenticatedCardsIndexRoute: AuthenticatedCardsIndexRoute,
   AuthenticatedCardsIdEditRoute: AuthenticatedCardsIdEditRoute,
@@ -289,6 +288,7 @@ const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
 )
 
 const rootRouteChildren: RootRouteChildren = {
+  IndexRoute: IndexRoute,
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   LoginRoute: LoginRoute,
   SignupRoute: SignupRoute,

@@ -9,7 +9,4 @@ export type AutofillFailure = {
 }
 
 export type ImageUploadStage =
-  | 'input'
-  | 'configuration'
-  | 'provider'
-  | 'database'
+  'input' | 'configuration' | 'provider' | 'database'

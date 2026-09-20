@@ -13,6 +13,7 @@ export type CardRecord = {
   phone: string | null
   email: string | null
   company: string | null
+  location: string | null
   notes: string | null
   categoryId: string | null
   categoryName: string | null

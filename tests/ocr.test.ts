@@ -19,6 +19,7 @@ const contact = {
   phone: '+123-456-7890',
   email: 'hello@zivora.com',
   company: 'Zivora',
+  location: 'San Francisco, CA',
   categoryId: null,
 }
 function completion(content: string, finishReason = 'stop') {
@@ -55,7 +56,8 @@ test('OCR sends a file, then OpenRouter returns only validated contact fields', 
         ParsedResults: [
           {
             FileParseExitCode: '1',
-            ParsedText: 'VISHWA KUMAR\n+123-456-7890\nhello@zivora.com\nZivora',
+            ParsedText:
+              'VISHWA KUMAR\n+123-456-7890\nhello@zivora.com\nZivora\nSan Francisco, CA',
           },
         ],
       })
@@ -151,6 +153,7 @@ test('validates scan size/type and nullable contact fields', () => {
       phone: null,
       email: null,
       company: null,
+      location: null,
       categoryId: null,
     }).success,
     true,
@@ -181,13 +184,13 @@ test('AI receives categories and descriptions and selects only an offered catego
         : JSON.parse(String(options?.body))
     const payload = JSON.parse(body.messages[1].content)
     assert.deepEqual(payload.categories, categories)
-    assert.equal(payload.text, 'Zivora — brand design and illustration')
+    assert.equal(payload.text, 'Zivora \u2014 brand design and illustration')
     return completion(
       JSON.stringify({ ...contact, categoryId: categories[0]!.id }),
     )
   }
   const result = await extractCardFromText(
-    'Zivora — brand design and illustration',
+    'Zivora \u2014 brand design and illustration',
     categories,
   )
   assert.equal(result.categoryId, categories[0]!.id)

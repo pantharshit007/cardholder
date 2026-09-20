@@ -10,7 +10,10 @@ import { env } from '@/env'
 import * as schema from './schema'
 
 function resolveDbDriver(): DbDriver {
-  return env.DB_DRIVER ?? (env.NODE_ENV === 'production' ? DB_DRIVER_PROD : DB_DRIVER_DEV)
+  return (
+    env.DB_DRIVER ??
+    (env.NODE_ENV === 'production' ? DB_DRIVER_PROD : DB_DRIVER_DEV)
+  )
 }
 
 function createDb() {

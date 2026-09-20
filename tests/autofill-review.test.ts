@@ -19,6 +19,10 @@ test('automatic suggestions preserve entered values and deliberate clears across
     'none',
   )
   assert.equal(
+    autofillValue('location', '', 'Tokyo, Japan', false),
+    'Tokyo, Japan',
+  )
+  assert.equal(
     autofillValue('name', '', 'Suggested name', false),
     'Suggested name',
   )
@@ -30,6 +34,10 @@ test('explicit suggestion application replaces values but never clears absent da
     'Suggested name',
   )
   assert.equal(autofillValue('name', 'My name', null, true, true), 'My name')
+  assert.equal(
+    autofillValue('location', 'Old Location', 'New Location', true, true),
+    'New Location',
+  )
   assert.equal(autofillValue('phone', '555', '', false, true), '555')
   assert.equal(
     autofillValue('categoryId', 'none', 'suggested-id', true, true),
@@ -98,6 +106,8 @@ test('error handling preserves server status messages and handles non-JSON error
 test('provider schema is portable and restricts category IDs without local email constraints', () => {
   const schema = createExtractionJsonSchema(['allowed-category'])
   assert.deepEqual(schema.properties.email, { type: ['string', 'null'] })
+  assert.deepEqual(schema.properties.location, { type: ['string', 'null'] })
+  assert.ok(schema.required.includes('location'))
   assert.equal(schema.additionalProperties, false)
   assert.deepEqual(schema.properties.categoryId, {
     type: ['string', 'null'],

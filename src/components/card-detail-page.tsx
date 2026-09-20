@@ -10,6 +10,7 @@ import {
   ExternalLinkIcon,
   FileTextIcon,
   MailIcon,
+  MapPinIcon,
   PencilIcon,
   PhoneIcon,
   Trash2Icon,
@@ -33,23 +34,31 @@ export function CardDetailPage({ card }: { card: CardRecord }) {
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [copiedPhone, setCopiedPhone] = useState(false)
   const [copiedEmail, setCopiedEmail] = useState(false)
+  const [copiedLocation, setCopiedLocation] = useState(false)
 
   const stripeColor = categoryStripeColor(card.categoryColor ?? null)
   const detailImageUrl = card.imageUrl
     ? getCardDetailImageUrl(card.imageUrl)
     : null
 
-  async function copyToClipboard(text: string, type: 'phone' | 'email') {
+  async function copyToClipboard(
+    text: string,
+    type: 'phone' | 'email' | 'location',
+  ) {
     try {
       await navigator.clipboard.writeText(text)
       if (type === 'phone') {
         setCopiedPhone(true)
         setTimeout(() => setCopiedPhone(false), COPY_FEEDBACK_TIMEOUT_MS)
         toast.success('Phone number copied to clipboard.')
-      } else {
+      } else if (type === 'email') {
         setCopiedEmail(true)
         setTimeout(() => setCopiedEmail(false), COPY_FEEDBACK_TIMEOUT_MS)
         toast.success('Email copied to clipboard.')
+      } else {
+        setCopiedLocation(true)
+        setTimeout(() => setCopiedLocation(false), COPY_FEEDBACK_TIMEOUT_MS)
+        toast.success('Location copied to clipboard.')
       }
     } catch {
       toast.error('Failed to copy to clipboard.')
@@ -120,12 +129,20 @@ export function CardDetailPage({ card }: { card: CardRecord }) {
           {card.name}
         </h1>
 
-        {card.company ? (
-          <p className="mt-2 flex items-center gap-2 text-lg text-muted-foreground">
-            <BuildingIcon className="size-4 text-muted-foreground" />
-            {card.company}
-          </p>
-        ) : null}
+        <div className="mt-2 flex flex-wrap items-center gap-4 text-muted-foreground">
+          {card.company ? (
+            <p className="flex items-center gap-2 text-lg">
+              <BuildingIcon className="size-4 text-muted-foreground" />
+              {card.company}
+            </p>
+          ) : null}
+          {card.location ? (
+            <p className="flex items-center gap-1.5 text-sm">
+              <MapPinIcon className="size-3.5 text-muted-foreground" />
+              {card.location}
+            </p>
+          ) : null}
+        </div>
       </section>
 
       {/* Main Grid: Card Image & Info */}
@@ -185,6 +202,7 @@ export function CardDetailPage({ card }: { card: CardRecord }) {
                 <div className="space-y-1 border-t border-foreground/10 pt-4 font-mono text-xs text-foreground/80">
                   {card.phone ? <p>{card.phone}</p> : null}
                   {card.email ? <p>{card.email}</p> : null}
+                  {card.location ? <p>{card.location}</p> : null}
                 </div>
               </div>
             )}
@@ -264,9 +282,40 @@ export function CardDetailPage({ card }: { card: CardRecord }) {
                 </div>
               ) : null}
 
-              {!card.phone && !card.email ? (
+              {/* Location */}
+              {card.location ? (
+                <div className="flex items-center justify-between rounded-xl border border-foreground/10 bg-muted/20 p-3.5">
+                  <div className="min-w-0 flex-1">
+                    <p className="flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground uppercase">
+                      <MapPinIcon className="size-3" />
+                      Location
+                    </p>
+                    <p className="mt-0.5 block truncate text-sm font-medium text-foreground">
+                      {card.location}
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() =>
+                      void copyToClipboard(card.location!, 'location')
+                    }
+                    className="size-8 p-0"
+                    aria-label="Copy location"
+                  >
+                    {copiedLocation ? (
+                      <CheckIcon className="size-4 text-green-500" />
+                    ) : (
+                      <CopyIcon className="size-4 text-muted-foreground" />
+                    )}
+                  </Button>
+                </div>
+              ) : null}
+
+              {!card.phone && !card.email && !card.location ? (
                 <p className="text-sm text-muted-foreground italic">
-                  No phone number or email address saved for this card.
+                  No contact information saved for this card.
                 </p>
               ) : null}
             </div>

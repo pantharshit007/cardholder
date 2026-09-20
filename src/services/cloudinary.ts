@@ -131,6 +131,51 @@ export function getCardDetailImageUrl(
   return `${prefix}${transformation}/${suffix}`
 }
 
+export function extractPublicIdFromUrl(
+  url: string | null | undefined,
+): string | null {
+  if (!url) return null
+  try {
+    const uploadSegment = '/image/upload/'
+    const uploadIndex = url.indexOf(uploadSegment)
+    if (uploadIndex === -1) return null
+
+    let path = url.slice(uploadIndex + uploadSegment.length)
+    const qIdx = path.indexOf('?')
+    if (qIdx !== -1) path = path.slice(0, qIdx)
+    const hIdx = path.indexOf('#')
+    if (hIdx !== -1) path = path.slice(0, hIdx)
+
+    const segments = path.split('/')
+    const filtered: string[] = []
+    let pastTransformationsAndVersion = false
+
+    for (const seg of segments) {
+      if (!pastTransformationsAndVersion) {
+        if (/^v\d+$/.test(seg)) {
+          pastTransformationsAndVersion = true
+          continue
+        }
+        if (seg.includes(',') || /^[a-z]_[a-z0-9_,-]+$/i.test(seg)) {
+          continue
+        }
+        pastTransformationsAndVersion = true
+      }
+      filtered.push(seg)
+    }
+
+    let fullPath = filtered.join('/')
+    const dotIndex = fullPath.lastIndexOf('.')
+    if (dotIndex !== -1) {
+      fullPath = fullPath.slice(0, dotIndex)
+    }
+
+    return fullPath || null
+  } catch {
+    return null
+  }
+}
+
 async function sha1Hex(str: string): Promise<string> {
   const buffer = new TextEncoder().encode(str)
   const hashBuffer = await crypto.subtle.digest('SHA-1', buffer)
@@ -139,10 +184,16 @@ async function sha1Hex(str: string): Promise<string> {
 }
 
 export async function deleteCloudinaryImage(
-  publicId: string | null | undefined,
+  publicIdOrUrl: string | null | undefined,
 ): Promise<boolean> {
-  if (!publicId) return false
+  if (!publicIdOrUrl) return false
   if (typeof window !== 'undefined') return false
+
+  const publicId = publicIdOrUrl.includes('/image/upload/')
+    ? extractPublicIdFromUrl(publicIdOrUrl)
+    : publicIdOrUrl
+
+  if (!publicId) return false
 
   const apiKey = env.CLOUDINARY_API_KEY
   const apiSecret = env.CLOUDINARY_API_SECRET

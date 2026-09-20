@@ -7,6 +7,7 @@ import {
   FolderIcon,
   Loader2Icon,
   MailIcon,
+  MapPinIcon,
   PhoneIcon,
   ScanTextIcon,
   UploadCloudIcon,
@@ -73,6 +74,7 @@ export function CardForm({
   const [company, setCompany] = useState(card?.company ?? '')
   const [phone, setPhone] = useState(card?.phone ?? '')
   const [email, setEmail] = useState(card?.email ?? '')
+  const [location, setLocation] = useState(card?.location ?? '')
   const [categoryId, setCategoryId] = useState<string>(
     card?.categoryId ?? 'none',
   )
@@ -159,6 +161,7 @@ export function CardForm({
     setName((current) => apply('name', current))
     setPhone((current) => apply('phone', current))
     setEmail((current) => apply('email', current))
+    setLocation((current) => apply('location', current))
     setCompany((current) => apply('company', current))
     setCategoryId((current) => apply('categoryId', current))
     if (
@@ -258,19 +261,21 @@ export function CardForm({
 
     const trimmedName = name.trim()
     if (!trimmedName) {
-      setNameError('Please enter a name for this card.')
+      setNameError('Enter a name.')
       return
     }
 
     const trimmedEmail = email.trim()
-    if (trimmedEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
-      setEmailError('Please enter a valid email address.')
-      return
+    if (trimmedEmail) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+      if (!emailRegex.test(trimmedEmail)) {
+        setEmailError('Enter a valid email address.')
+        return
+      }
     }
 
     let imageUploadId: string | null = null
 
-    // If a new image was chosen, upload to Cloudinary
     if (imageFile) {
       setIsUploading(true)
       try {
@@ -305,6 +310,7 @@ export function CardForm({
                 company: company.trim() || null,
                 phone: phone.trim() || null,
                 email: trimmedEmail || null,
+                location: location.trim() || null,
                 notes: notes.trim() || null,
                 categoryId: selectedCategoryId,
                 imageUploadId,
@@ -317,6 +323,7 @@ export function CardForm({
                 company: company.trim() || null,
                 phone: phone.trim() || null,
                 email: trimmedEmail || null,
+                location: location.trim() || null,
                 notes: notes.trim() || null,
                 categoryId: selectedCategoryId,
                 imageUploadId,
@@ -468,7 +475,7 @@ export function CardForm({
               ) : (
                 <ScanTextIcon className="size-4" />
               )}
-              {isScanning ? 'Reading card…' : 'Auto-fill details'}
+              {isScanning ? 'Reading card\u2026' : 'Auto-fill details'}
             </Button>
             <p role="status" className="text-xs text-muted-foreground">
               {isScanning
@@ -486,6 +493,7 @@ export function CardForm({
               phone,
               email,
               company,
+              location,
               categoryId: categoryId === 'none' ? null : categoryId,
             }}
             categories={categories}
@@ -655,6 +663,29 @@ export function CardForm({
               aria-invalid={emailError ? true : undefined}
             />
             <FieldError>{emailError}</FieldError>
+          </Field>
+
+          {/* Location */}
+          <Field className="sm:col-span-2">
+            <FieldLabel htmlFor="card-location">
+              <span className="flex items-center gap-1.5">
+                <MapPinIcon className="size-3.5 text-muted-foreground" />
+                Location
+              </span>
+            </FieldLabel>
+            <Input
+              id="card-location"
+              name="location"
+              value={location}
+              maxLength={FIELD_LIMITS.location}
+              placeholder="e.g. San Francisco, CA or Tokyo, Japan"
+              disabled={isBusy}
+              onChange={(e) => {
+                editedFieldsRef.current.add('location')
+                setLocation(e.target.value)
+              }}
+              className="bg-card"
+            />
           </Field>
 
           {/* Notes */}

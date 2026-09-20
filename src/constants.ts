@@ -7,8 +7,8 @@ export const DEV_SERVER_PORT = 3000
 
 export const LOGIN_PATH = '/login' as const
 export const SIGNUP_PATH = '/signup' as const
-export const DEFAULT_POST_AUTH_PATH = '/' as const
-export const CARDS_PATH = '/' as const
+export const DEFAULT_POST_AUTH_PATH = '/cards' as const
+export const CARDS_PATH = '/cards' as const
 export const CARD_NEW_PATH = '/cards/new' as const
 export const CATEGORIES_PATH = '/categories' as const
 
@@ -43,6 +43,7 @@ export const FIELD_LIMITS = {
   categoryName: 50,
   phone: 40,
   email: 254,
+  location: 120,
   company: 120,
   notes: 2000,
 } as const
@@ -144,6 +145,7 @@ export const AUTOFILL_FIELDS = [
   { key: 'company', label: 'Company' },
   { key: 'phone', label: 'Phone' },
   { key: 'email', label: 'Email' },
+  { key: 'location', label: 'Location' },
   { key: 'categoryId', label: 'Category' },
 ] as const
 

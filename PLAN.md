@@ -383,7 +383,11 @@ SKIP_ENV_VALIDATION=true OPENROUTER_API_KEY=test OCR_SPACE_API_KEY=test pnpm exe
 - Category filter + sort combine correctly and persist in the URL.
 - Layout works well on mobile and desktop.
 
-**Review Checkpoint:** Commit `feat: search, filter, sort + list polish`. Pause.
+**Implementation:** List retrieval now runs through the authenticated server query with debounced search and validated URL search/category/sort parameters. Existing company/email/location/notes search and Uncategorized/Name Z–A options remain available. Empty search results retain the controls and clear-filters action. Existing responsive grid, route skeleton, and detail call/copy/full-image actions are retained. The server accepts optional validated `limit`/`offset`, with stable ID tie-breaking; pagination UI remains optional and is not enabled.
+
+**Verification:** `pnpm typecheck`, `pnpm lint`, `pnpm build`, all 22 unit/provider tests, and a disposable-Postgres integration test passed. The integration test covers combined filters/sort, phone fragments, user isolation, literal LIKE metacharacters, and limit/offset. Browser automation was unavailable; visual mobile/desktop and browser refresh/history checks remain manual.
+
+**Review Checkpoint:** Commit only with user permission: `feat: search, filter, sort + list polish`. Pause.
 
 ---
 

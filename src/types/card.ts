@@ -29,5 +29,9 @@ export type CardListItem = CardRecord
 export type ListCardsFilter = {
   search?: string
   categoryId?: string
+  limit?: number
+  offset?: number
   sort?: CardSortOption
 }
+
+export type CardListSearch = Omit<ListCardsFilter, 'limit' | 'offset'>

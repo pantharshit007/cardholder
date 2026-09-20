@@ -1,6 +1,7 @@
 import { z } from 'zod'
 
 import {
+  CARD_CONFIG,
   CARD_NAME_MIN_LENGTH,
   CARD_SORT_OPTIONS,
   FIELD_LIMITS,
@@ -137,12 +138,23 @@ export const discardCardUploadSchema = z.object({
 })
 
 export const listCardsSchema = z.object({
-  search: z.string().optional(),
-  categoryId: z.string().optional(),
+  search: z.string().trim().max(CARD_CONFIG.searchMaxLength).optional(),
+  categoryId: z
+    .union([z.string().uuid(), z.literal('all'), z.literal('uncategorized')])
+    .optional(),
   sort: z.enum(CARD_SORT_OPTIONS).optional(),
+  limit: z.number().int().positive().max(CARD_CONFIG.maxPageSize).optional(),
+  offset: z.number().int().nonnegative().optional(),
 })
 
 export type CreateCardInput = z.infer<typeof createCardSchema>
 export type UpdateCardInput = z.infer<typeof updateCardSchema>
 export type DeleteCardInput = z.infer<typeof deleteCardSchema>
 export type ListCardsInput = z.infer<typeof listCardsSchema>
+
+// Invalid bookmarks fall back per field; RPC validation remains strict.
+export const cardListSearchSchema = z.object({
+  search: listCardsSchema.shape.search.catch(undefined),
+  categoryId: listCardsSchema.shape.categoryId.catch(undefined),
+  sort: listCardsSchema.shape.sort.catch(undefined),
+})

@@ -1,6 +1,7 @@
 import { and, asc, desc, eq, ilike, isNull, or } from 'drizzle-orm'
 
 import { db } from '@/db'
+import { escapeLikePattern } from '@/utils/search'
 import {
   cardImageUploads,
   cards,
@@ -36,7 +37,7 @@ export async function listCardsForUser(
   }
 
   if (filter?.search && filter.search.trim().length > 0) {
-    const pattern = `%${filter.search.trim()}%`
+    const pattern = `%${escapeLikePattern(filter.search.trim())}%`
     conditions.push(
       or(
         ilike(cards.name, pattern),
@@ -58,7 +59,7 @@ export async function listCardsForUser(
     orderByClause = desc(cards.name)
   }
 
-  const rows = await db
+  const query = db
     .select({
       id: cards.id,
       userId: cards.userId,
@@ -79,7 +80,12 @@ export async function listCardsForUser(
     .from(cards)
     .leftJoin(categories, eq(cards.categoryId, categories.id))
     .where(and(...conditions))
-    .orderBy(orderByClause)
+    .orderBy(orderByClause, asc(cards.id))
+    .$dynamic()
+
+  if (filter?.limit !== undefined) query.limit(filter.limit)
+  if (filter?.offset !== undefined) query.offset(filter.offset)
+  const rows = await query
 
   return rows.map((row) => ({
     id: row.id,

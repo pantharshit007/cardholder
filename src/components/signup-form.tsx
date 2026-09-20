@@ -77,6 +77,8 @@ export function SignupForm() {
       return
     }
 
+    router.options.context.navigationSession.clear()
+    router.clearCache()
     await router.invalidate()
     await navigate({ to: '/', replace: true })
   }

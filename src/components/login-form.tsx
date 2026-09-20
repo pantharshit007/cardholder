@@ -70,6 +70,8 @@ export function LoginForm({
       return
     }
 
+    router.options.context.navigationSession.clear()
+    router.clearCache()
     await router.invalidate()
     const next = safeRedirectPath(redirectTo)
     await navigate({ href: next, replace: true })

@@ -13,6 +13,11 @@ export const APP_CONFIG = {
 /**
  * Cohesive Navigation & Route Paths Configuration
  */
+export const NAVIGATION_CONFIG = {
+  preloadStaleTimeMs: 30_000,
+  sessionStaleTimeMs: 30_000,
+} as const
+
 export const NAV_PATHS = {
   admin: '/admin',
   verificationPending: '/verification-pending',

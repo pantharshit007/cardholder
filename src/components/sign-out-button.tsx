@@ -24,6 +24,8 @@ export function SignOutButton() {
       return
     }
 
+    router.options.context.navigationSession.clear()
+    router.clearCache()
     await router.invalidate()
     await navigate({ to: LOGIN_PATH, replace: true })
   }

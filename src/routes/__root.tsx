@@ -2,10 +2,11 @@ import {
   HeadContent,
   Outlet,
   Scripts,
-  createRootRoute,
+  createRootRouteWithContext,
 } from '@tanstack/react-router'
 import { AppProviders } from '@/components/app-providers'
 import { NotFound } from '@/components/not-found'
+import type { RouterContext } from '@/types/router'
 import { APP_NAME } from '@/constants'
 
 import appCss from '../styles.css?url'
@@ -35,7 +36,7 @@ try {
 } catch (_) {}
 `
 
-export const Route = createRootRoute({
+export const Route = createRootRouteWithContext<RouterContext>()({
   head: () => ({
     meta: [
       {

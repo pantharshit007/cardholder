@@ -15,6 +15,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { SIGNUP_PATH } from '@/constants'
 import { authClient } from '@/lib/auth-client'
+import { resetAuthNavigation } from '@/lib/reset-auth-navigation'
 import { signInSchema } from '@/lib/validators/auth'
 import { authErrorMessage } from '@/utils/auth-error'
 import { safeRedirectPath } from '@/utils/safe-redirect'
@@ -70,9 +71,7 @@ export function LoginForm({
       return
     }
 
-    router.options.context.navigationSession.clear()
-    router.clearCache()
-    await router.invalidate()
+    await resetAuthNavigation(router)
     const next = safeRedirectPath(redirectTo)
     await navigate({ href: next, replace: true })
   }

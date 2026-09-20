@@ -7,7 +7,7 @@ import { listCategoriesWithCounts } from '@/services/category.service'
 import type { CardsPageData } from '@/types/cards-page'
 
 export const fetchCardsPage = createServerFn({ method: 'GET' })
-  .validator((input: unknown) => listCardsSchema.parse(input))
+  .validator((input?: unknown) => listCardsSchema.optional().parse(input))
   .handler(async ({ data }): Promise<CardsPageData> => {
     const user = await requireUser()
     const [cards, categories] = await Promise.all([

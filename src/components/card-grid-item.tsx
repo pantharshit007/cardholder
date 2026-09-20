@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router'
-import { BuildingIcon, MailIcon, PhoneIcon } from 'lucide-react'
+import { BuildingIcon, MailIcon, MapPinIcon, PhoneIcon } from 'lucide-react'
 
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
@@ -120,7 +120,14 @@ export function CardGridItem({ card }: { card: CardListItem }) {
             </p>
           ) : null}
 
-          {!card.phone && !card.email ? (
+          {card.location ? (
+            <p className="flex items-center gap-2 text-muted-foreground">
+              <MapPinIcon className="size-3 shrink-0" />
+              <span className="truncate">{card.location}</span>
+            </p>
+          ) : null}
+
+          {!card.phone && !card.email && !card.location ? (
             <p className="text-muted-foreground/60 italic">No contact info</p>
           ) : null}
         </div>

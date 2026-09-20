@@ -21,6 +21,7 @@ export function CardFormSkeleton() {
           <Skeleton className="h-16" />
           <Skeleton className="h-16" />
           <Skeleton className="h-16" />
+          <Skeleton className="h-16 sm:col-span-2" />
           <Skeleton className="h-28 sm:col-span-2" />
         </div>
       </section>

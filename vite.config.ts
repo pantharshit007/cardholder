@@ -19,6 +19,9 @@ const config = defineConfig(async ({ mode }): Promise<UserConfig> => {
   return {
     resolve: { tsconfigPaths: true },
     plugins: [tailwindcss(), tanstackStart(), viteReact()],
+    server: {
+      allowedHosts: ['.ts.net'],
+    },
   }
 })
 

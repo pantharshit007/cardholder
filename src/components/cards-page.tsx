@@ -53,7 +53,9 @@ export function CardsPage({
           card.name.toLowerCase().includes(q) ||
           (card.phone && card.phone.toLowerCase().includes(q)) ||
           (card.company && card.company.toLowerCase().includes(q)) ||
-          (card.email && card.email.toLowerCase().includes(q)),
+          (card.email && card.email.toLowerCase().includes(q)) ||
+          (card.location && card.location.toLowerCase().includes(q)) ||
+          (card.notes && card.notes.toLowerCase().includes(q)),
       )
     }
 

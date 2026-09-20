@@ -58,6 +58,19 @@ export const cardCompanySchema = z
   )
   .optional()
 
+export const cardLocationSchema = z
+  .preprocess(
+    emptyToNull,
+    z
+      .string()
+      .max(
+        FIELD_LIMITS.location,
+        `Keep it under ${FIELD_LIMITS.location} characters.`,
+      )
+      .nullable(),
+  )
+  .optional()
+
 export const cardNotesSchema = z
   .preprocess(
     emptyToNull,
@@ -92,6 +105,7 @@ export const createCardSchema = z.object({
   phone: cardPhoneSchema,
   email: cardEmailSchema,
   company: cardCompanySchema,
+  location: cardLocationSchema,
   notes: cardNotesSchema,
   categoryId: cardCategoryIdSchema,
   imageUploadId: cardImageUploadIdSchema,
@@ -104,6 +118,7 @@ export const updateCardSchema = z
     phone: cardPhoneSchema,
     email: cardEmailSchema,
     company: cardCompanySchema,
+    location: cardLocationSchema,
     notes: cardNotesSchema,
     categoryId: cardCategoryIdSchema,
     imageUploadId: cardImageUploadIdSchema,

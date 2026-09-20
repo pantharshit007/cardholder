@@ -29,7 +29,6 @@ export async function readFormDataWithLimit(
 
       totalBytes += value.byteLength
       if (totalBytes > maxBytes) {
-        await reader.cancel()
         throw new RequestBodyTooLargeError()
       }
 

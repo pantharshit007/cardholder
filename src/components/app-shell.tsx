@@ -1,9 +1,10 @@
 import { Link } from '@tanstack/react-router'
 
+import { FooterCredit } from '@/components/footer-credit'
 import { SignOutButton } from '@/components/sign-out-button'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import { APP_NAME, CATEGORIES_PATH } from '@/constants'
+import { APP_NAME, CARDS_PATH, CATEGORIES_PATH } from '@/constants'
 import type { PublicUser } from '@/types/auth'
 import { initialsFromName } from '@/utils/auth-user'
 
@@ -19,14 +20,14 @@ export function AppShell({
       <header className="flex items-center justify-between gap-2 px-4 py-5 sm:gap-4 md:px-8">
         <div className="flex min-w-0 items-center gap-2 sm:gap-5 md:gap-8">
           <Link
-            to="/"
+            to={CARDS_PATH}
             className="font-display text-sm tracking-tight text-foreground sm:text-lg"
           >
             {APP_NAME}
           </Link>
           <nav className="flex items-center gap-2 text-sm sm:gap-4">
             <Link
-              to="/"
+              to={CARDS_PATH}
               activeOptions={{ exact: true }}
               className="transition-colors hover:text-foreground"
               inactiveProps={{ className: 'text-muted-foreground' }}
@@ -59,7 +60,12 @@ export function AppShell({
           <ThemeToggle />
         </div>
       </header>
-      {children}
+      <div className="flex flex-1 flex-col">{children}</div>
+      <footer className="mt-auto border-t border-foreground/10 px-4 py-4 md:px-8">
+        <div className="mx-auto flex max-w-7xl items-center justify-end">
+          <FooterCredit />
+        </div>
+      </footer>
     </div>
   )
 }

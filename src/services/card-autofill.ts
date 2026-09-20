@@ -2,6 +2,10 @@ import { CARD_EXTRACTION_CONFIG, OCR_CONFIG } from '@/constants'
 import { readAutofillResponse } from '@/services/autofill-response'
 import type { ExtractedCard } from '@/types/ocr'
 
+export interface AutofillCardOptions {
+  isMultilingual?: boolean
+}
+
 /** Encode a scan-sized JPEG while leaving the original upload untouched. */
 async function prepareScanImage(file: File): Promise<Blob> {
   const bitmap = await createImageBitmap(file)
@@ -39,11 +43,15 @@ async function prepareScanImage(file: File): Promise<Blob> {
 export async function autofillCardFromImage(
   file: File,
   signal: AbortSignal,
+  options?: AutofillCardOptions,
 ): Promise<ExtractedCard> {
   const image = await prepareScanImage(file)
   signal.throwIfAborted()
   const body = new FormData()
   body.set('file', image, 'card.jpg')
+  if (options?.isMultilingual) {
+    body.set('multilingual', 'true')
+  }
   const response = await fetch(OCR_CONFIG.apiPath, {
     method: 'POST',
     body,

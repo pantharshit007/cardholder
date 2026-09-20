@@ -21,8 +21,8 @@ export function CardsEmptyState({
           No cards found
         </h3>
         <p className="mt-2 max-w-md text-sm text-muted-foreground">
-          No cards matched your current search or category filter. Try
-          adjusting your search term or clearing the filter.
+          No cards matched your current search or category filter. Try adjusting
+          your search term or clearing the filter.
         </p>
         {onClearFilters ? (
           <Button

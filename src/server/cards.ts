@@ -23,7 +23,7 @@ import type { CardListItem, CardRecord } from '@/types/card'
 import { mutationFail, mutationOk } from '@/utils/mutation-result'
 
 export const listCards = createServerFn({ method: 'GET' })
-  .validator((input) => listCardsSchema.optional().parse(input))
+  .validator((input?: unknown) => listCardsSchema.optional().parse(input))
   .handler(async ({ data }): Promise<CardListItem[]> => {
     const user = await requireUser()
     return listCardsForUser(user.id, data)
@@ -48,6 +48,7 @@ export const createCard = createServerFn({ method: 'POST' })
         phone: data.phone ?? null,
         email: data.email ?? null,
         company: data.company ?? null,
+        location: data.location ?? null,
         notes: data.notes ?? null,
         categoryId: data.categoryId ?? null,
         imageUploadId: data.imageUploadId ?? null,
@@ -73,6 +74,7 @@ export const updateCard = createServerFn({ method: 'POST' })
         phone: data.phone ?? null,
         email: data.email ?? null,
         company: data.company ?? null,
+        location: data.location ?? null,
         notes: data.notes ?? null,
         categoryId: data.categoryId ?? null,
         imageUploadId: data.imageUploadId ?? null,

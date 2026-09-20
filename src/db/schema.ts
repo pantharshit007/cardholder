@@ -47,6 +47,7 @@ export const cards = pgTable(
     phone: text('phone'),
     email: text('email'),
     company: text('company'),
+    location: text('location'),
     notes: text('notes'),
     categoryId: uuid('category_id').references(() => categories.id, {
       onDelete: 'set null',

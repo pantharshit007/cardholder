@@ -4,12 +4,13 @@ export function createExtractionJsonSchema(categoryIds: string[]) {
   return {
     type: 'object',
     additionalProperties: false,
-    required: ['name', 'phone', 'email', 'company', 'categoryId'],
+    required: ['name', 'phone', 'email', 'company', 'location', 'categoryId'],
     properties: {
       name: nullableString,
       phone: nullableString,
       email: nullableString,
       company: nullableString,
+      location: nullableString,
       categoryId: categoryIds.length
         ? { type: ['string', 'null'], enum: [...categoryIds, null] }
         : { type: 'null' },

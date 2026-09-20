@@ -8,6 +8,7 @@ import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { LOGIN_PATH } from '@/constants'
 import { authClient } from '@/lib/auth-client'
+import { resetAuthNavigation } from '@/lib/reset-auth-navigation'
 import { authErrorMessage } from '@/utils/auth-error'
 
 export function SignOutButton() {
@@ -24,7 +25,7 @@ export function SignOutButton() {
       return
     }
 
-    await router.invalidate()
+    await resetAuthNavigation(router)
     await navigate({ to: LOGIN_PATH, replace: true })
   }
 

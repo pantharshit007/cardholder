@@ -9,6 +9,7 @@
     "preview": "vite preview --port 3000",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
+    "test": "node --env-file=tests/fixtures/unit.env --import tsx --test tests/*.test.ts",
     "format": "prettier --write . && eslint --fix",
     "check": "prettier --check .",
     "generate-routes": "tsr generate",

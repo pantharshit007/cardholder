@@ -3,19 +3,12 @@ import { createFileRoute } from '@tanstack/react-router'
 import { CardsPage } from '@/components/cards-page'
 import { CardsPageSkeleton } from '@/components/cards-page-skeleton'
 import { cardListSearchSchema } from '@/lib/validators/card'
-import { listCards } from '@/server/cards'
-import { listCategories } from '@/server/categories'
+import { fetchCardsPage } from '@/server/cards-page'
 
 export const Route = createFileRoute('/_authenticated/cards/')({
   validateSearch: (search) => cardListSearchSchema.parse(search),
   loaderDeps: ({ search }) => search,
-  loader: async ({ deps }) => {
-    const [cards, categories] = await Promise.all([
-      listCards({ data: deps }),
-      listCategories(),
-    ])
-    return { cards, categories }
-  },
+  loader: ({ deps }) => fetchCardsPage({ data: deps }),
   pendingComponent: CardsPageSkeleton,
   component: AuthenticatedCardsRoute,
 })

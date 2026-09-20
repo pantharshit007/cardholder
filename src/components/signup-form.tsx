@@ -20,6 +20,7 @@ import {
   LOGIN_PATH,
 } from '@/constants'
 import { authClient } from '@/lib/auth-client'
+import { resetAuthNavigation } from '@/lib/reset-auth-navigation'
 import { signUpSchema } from '@/lib/validators/auth'
 import { authErrorMessage } from '@/utils/auth-error'
 
@@ -77,7 +78,7 @@ export function SignupForm() {
       return
     }
 
-    await router.invalidate()
+    await resetAuthNavigation(router)
     await navigate({ to: '/', replace: true })
   }
 

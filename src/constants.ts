@@ -14,6 +14,8 @@ export const APP_CONFIG = {
  * Cohesive Navigation & Route Paths Configuration
  */
 export const NAV_PATHS = {
+  admin: '/admin',
+  verificationPending: '/verification-pending',
   login: '/login',
   signup: '/signup',
   cards: '/cards',
@@ -26,6 +28,8 @@ export const NAV_PATHS = {
  * Cohesive Authentication Configuration
  */
 export const AUTH_CONFIG = {
+  verificationPendingMessage:
+    'Please wait for the maintainer to verify your email. You can access this site once your email has been verified.',
   passwordMinLength: 8,
   passwordMaxLength: 128,
   nameMaxLength: 80,
@@ -278,3 +282,9 @@ export const ALLOWED_IMAGE_MIME_TYPES = IMAGE_UPLOAD_CONFIG.allowedMimeTypes
 export const CLOUDINARY_API_BASE_URL = IMAGE_UPLOAD_CONFIG.cloudinaryApiBaseUrl
 export const CLOUDINARY_CLEANUP_BATCH_SIZE =
   IMAGE_UPLOAD_CONFIG.cloudinaryCleanupBatchSize
+
+export const ADMIN_CONFIG = {
+  pageSize: 20,
+  userIdMaxLength: 128,
+  statuses: ['pending', 'approved', 'all'] as const,
+} as const

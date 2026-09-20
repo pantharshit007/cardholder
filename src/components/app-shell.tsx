@@ -4,7 +4,7 @@ import { FooterCredit } from '@/components/footer-credit'
 import { SignOutButton } from '@/components/sign-out-button'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import { APP_NAME, CARDS_PATH, CATEGORIES_PATH } from '@/constants'
+import { APP_NAME, CARDS_PATH, CATEGORIES_PATH, NAV_PATHS } from '@/constants'
 import type { PublicUser } from '@/types/auth'
 import { initialsFromName } from '@/utils/auth-user'
 
@@ -25,7 +25,7 @@ export function AppShell({
           >
             {APP_NAME}
           </Link>
-          <nav className="flex items-center gap-2 text-sm sm:gap-4">
+          <nav className="flex flex-wrap items-center gap-2 text-sm sm:gap-4">
             <Link
               to={CARDS_PATH}
               activeOptions={{ exact: true }}
@@ -43,6 +43,15 @@ export function AppShell({
             >
               Categories
             </Link>
+            {user.isAdmin ? (
+              <Link
+                to={NAV_PATHS.admin}
+                className="transition-colors hover:text-foreground"
+                inactiveProps={{ className: 'text-muted-foreground' }}
+              >
+                Approvals
+              </Link>
+            ) : null}
           </nav>
         </div>
         <div className="flex items-center gap-2 sm:gap-3">

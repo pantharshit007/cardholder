@@ -1,3 +1,4 @@
+import { requireVerifiedEmail } from '@/lib/verified-user'
 import { createFileRoute, redirect } from '@tanstack/react-router'
 
 import { SignupPage } from '@/components/signup-page'
@@ -11,6 +12,7 @@ export const Route = createFileRoute('/signup')({
       fetchAuthSettings(),
     ])
     if (session?.user) {
+      requireVerifiedEmail(session.user)
       throw redirect({ to: DEFAULT_POST_AUTH_PATH })
     }
 

@@ -1,3 +1,4 @@
+import { requireVerifiedEmail } from '@/lib/verified-user'
 import { createFileRoute, redirect } from '@tanstack/react-router'
 
 import { LoginPage } from '@/components/login-page'
@@ -16,6 +17,7 @@ export const Route = createFileRoute('/login')({
   beforeLoad: async () => {
     const session = await fetchSession()
     if (session?.user) {
+      requireVerifiedEmail(session.user)
       throw redirect({ to: DEFAULT_POST_AUTH_PATH })
     }
   },

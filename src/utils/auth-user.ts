@@ -3,6 +3,8 @@ import type { PublicUser } from '@/types/auth'
 export function toPublicUser(user: {
   id: string
   name: string
+  isAdmin: boolean
+  emailVerified: boolean
   email: string
   image?: string | null
 }): PublicUser {
@@ -10,6 +12,8 @@ export function toPublicUser(user: {
     id: user.id,
     name: user.name,
     email: user.email,
+    emailVerified: user.emailVerified,
+    isAdmin: user.isAdmin,
     image: user.image ?? null,
   }
 }

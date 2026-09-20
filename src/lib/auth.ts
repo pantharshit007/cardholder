@@ -22,6 +22,11 @@ export const auth = betterAuth({
     provider: 'pg',
     schema,
   }),
+  user: {
+    additionalFields: {
+      isAdmin: { type: 'boolean', defaultValue: false, input: false },
+    },
+  },
   emailAndPassword: {
     enabled: true,
     disableSignUp: !env.ALLOW_SIGNUP,

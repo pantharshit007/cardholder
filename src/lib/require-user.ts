@@ -2,12 +2,11 @@ import { redirect } from '@tanstack/react-router'
 import { getRequest } from '@tanstack/react-start/server'
 
 import { LOGIN_PATH } from '@/constants'
-import { auth } from '@/lib/auth'
+import { getRequestSession } from '@/lib/session'
+import { requireVerifiedEmail } from '@/lib/verified-user'
 
 export async function getCurrentSession() {
-  return auth.api.getSession({
-    headers: getRequest().headers,
-  })
+  return getRequestSession(getRequest().headers)
 }
 
 export async function requireUser() {
@@ -18,5 +17,6 @@ export async function requireUser() {
     throw redirect({ to: LOGIN_PATH })
   }
 
+  requireVerifiedEmail(user)
   return user
 }

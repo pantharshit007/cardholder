@@ -13,6 +13,8 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as SignupRouteImport } from './routes/signup'
+import { Route as VerificationPendingRouteImport } from './routes/verification-pending'
+import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedCategoriesRouteImport } from './routes/_authenticated/categories'
 import { Route as ApiOcrRouteImport } from './routes/api/ocr'
 import { Route as ApiUploadRouteImport } from './routes/api/upload'
@@ -40,6 +42,16 @@ const SignupRoute = SignupRouteImport.update({
   id: '/signup',
   path: '/signup',
   getParentRoute: () => rootRouteImport,
+} as any)
+const VerificationPendingRoute = VerificationPendingRouteImport.update({
+  id: '/verification-pending',
+  path: '/verification-pending',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedCategoriesRoute = AuthenticatedCategoriesRouteImport.update({
   id: '/categories',
@@ -88,6 +100,8 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
+  '/verification-pending': typeof VerificationPendingRoute
+  '/admin': typeof AuthenticatedAdminRoute
   '/categories': typeof AuthenticatedCategoriesRoute
   '/api/ocr': typeof ApiOcrRoute
   '/api/upload': typeof ApiUploadRoute
@@ -101,6 +115,8 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
+  '/verification-pending': typeof VerificationPendingRoute
+  '/admin': typeof AuthenticatedAdminRoute
   '/categories': typeof AuthenticatedCategoriesRoute
   '/api/ocr': typeof ApiOcrRoute
   '/api/upload': typeof ApiUploadRoute
@@ -116,6 +132,8 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
+  '/verification-pending': typeof VerificationPendingRoute
+  '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/categories': typeof AuthenticatedCategoriesRoute
   '/api/ocr': typeof ApiOcrRoute
   '/api/upload': typeof ApiUploadRoute
@@ -131,6 +149,8 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/signup'
+    | '/verification-pending'
+    | '/admin'
     | '/categories'
     | '/api/ocr'
     | '/api/upload'
@@ -144,6 +164,8 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/signup'
+    | '/verification-pending'
+    | '/admin'
     | '/categories'
     | '/api/ocr'
     | '/api/upload'
@@ -158,6 +180,8 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/login'
     | '/signup'
+    | '/verification-pending'
+    | '/_authenticated/admin'
     | '/_authenticated/categories'
     | '/api/ocr'
     | '/api/upload'
@@ -173,6 +197,7 @@ export interface RootRouteChildren {
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   LoginRoute: typeof LoginRoute
   SignupRoute: typeof SignupRoute
+  VerificationPendingRoute: typeof VerificationPendingRoute
   ApiOcrRoute: typeof ApiOcrRoute
   ApiUploadRoute: typeof ApiUploadRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
@@ -207,6 +232,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/signup'
       preLoaderRoute: typeof SignupRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/verification-pending': {
+      id: '/verification-pending'
+      path: '/verification-pending'
+      fullPath: '/verification-pending'
+      preLoaderRoute: typeof VerificationPendingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/admin': {
+      id: '/_authenticated/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AuthenticatedAdminRouteImport
+      parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/categories': {
       id: '/_authenticated/categories'
@@ -268,6 +307,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteChildren {
+  AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
   AuthenticatedCategoriesRoute: typeof AuthenticatedCategoriesRoute
   AuthenticatedCardsNewRoute: typeof AuthenticatedCardsNewRoute
   AuthenticatedCardsIndexRoute: typeof AuthenticatedCardsIndexRoute
@@ -276,6 +316,7 @@ interface AuthenticatedRouteChildren {
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
+  AuthenticatedAdminRoute: AuthenticatedAdminRoute,
   AuthenticatedCategoriesRoute: AuthenticatedCategoriesRoute,
   AuthenticatedCardsNewRoute: AuthenticatedCardsNewRoute,
   AuthenticatedCardsIndexRoute: AuthenticatedCardsIndexRoute,
@@ -292,6 +333,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   LoginRoute: LoginRoute,
   SignupRoute: SignupRoute,
+  VerificationPendingRoute: VerificationPendingRoute,
   ApiOcrRoute: ApiOcrRoute,
   ApiUploadRoute: ApiUploadRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,

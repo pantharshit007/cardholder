@@ -64,8 +64,10 @@ export async function handleCardAutofill(request: Request): Promise<Response> {
         { status: 400, headers },
       )
     }
+    const isMultilingual =
+      form.get('multilingual') === 'true' || form.get('multilingual') === '1'
     stage = 'ocr'
-    const text = await ocrFromImage(parsed.data)
+    const text = await ocrFromImage(parsed.data, { isMultilingual })
     stage = 'categories'
     const categories = await listCategoriesForExtraction(user.id)
     stage = 'extraction'

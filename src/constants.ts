@@ -20,6 +20,7 @@ export const AUTH_NAME_MAX_LENGTH = 80
 export const SESSION_COOKIE_CACHE_MAX_AGE_SECONDS = 5 * 60
 
 export const THEME_STORAGE_KEY = 'cardholder-theme'
+export const OCR_MULTILINGUAL_STORAGE_KEY = 'cardholder-ocr-multilingual'
 
 /** Allowed Drizzle drivers. Selection lives in `src/db/index.ts` via t3-env. */
 export const DB_DRIVERS = ['pg', 'neon'] as const
@@ -114,7 +115,9 @@ export const OCR_CONFIG = {
   endpoint: 'https://api.ocr.space/parse/image',
   allowedMimeTypes: ['image/jpeg', 'image/png'],
   engine: '2',
+  multilingualEngine: '3',
   language: 'eng',
+  multilingualLanguage: 'auto',
   timeoutMs: 30_000,
   maxImageBytes: 1_000_000,
   get maxRequestBytes() {

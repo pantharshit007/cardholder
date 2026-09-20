@@ -5,6 +5,7 @@ import { useServerFn } from '@tanstack/react-start'
 import {
   BuildingIcon,
   FolderIcon,
+  LanguagesIcon,
   Loader2Icon,
   MailIcon,
   MapPinIcon,
@@ -34,12 +35,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
 import {
   ALLOWED_IMAGE_MIME_TYPES,
   CARDS_PATH,
   FIELD_LIMITS,
   MAX_IMAGE_SIZE_MEBIBYTES,
+  OCR_MULTILINGUAL_STORAGE_KEY,
 } from '@/constants'
 import { createCard, discardCardUpload, updateCard } from '@/server/cards'
 import {
@@ -94,6 +97,25 @@ export function CardForm({
   const editedFieldsRef = useRef(new Set<keyof ExtractedCard>())
   const [isScanning, setIsScanning] = useState(false)
   const [suggestions, setSuggestions] = useState<ExtractedCard | null>(null)
+  const [isMultilingual, setIsMultilingual] = useState(false)
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(OCR_MULTILINGUAL_STORAGE_KEY)
+      if (saved === 'true') setIsMultilingual(true)
+    } catch {
+      // Ignore local storage errors
+    }
+  }, [])
+
+  const handleMultilingualChange = (checked: boolean) => {
+    setIsMultilingual(checked)
+    try {
+      localStorage.setItem(OCR_MULTILINGUAL_STORAGE_KEY, String(checked))
+    } catch {
+      // Ignore local storage errors
+    }
+  }
 
   /** Prevent a pending response from changing a replaced or submitted form. */
   function cancelScan() {
@@ -109,7 +131,9 @@ export function CardForm({
     scanRef.current = controller
     setIsScanning(true)
     try {
-      const fields = await autofillCardFromImage(imageFile, controller.signal)
+      const fields = await autofillCardFromImage(imageFile, controller.signal, {
+        isMultilingual,
+      })
       if (controller.signal.aborted) return
       setSuggestions(fields)
       applySuggestions(fields)
@@ -463,24 +487,47 @@ export function CardForm({
         )}
 
         {imageFile ? (
-          <div className="mt-3 flex flex-wrap items-center gap-3">
-            <Button
-              type="button"
-              variant="outline"
-              disabled={isBusy || isScanning}
-              onClick={() => void handleAutofill()}
-            >
-              {isScanning ? (
-                <Loader2Icon className="size-4 animate-spin" />
-              ) : (
-                <ScanTextIcon className="size-4" />
-              )}
-              {isScanning ? 'Reading card\u2026' : 'Auto-fill details'}
-            </Button>
+          <div className="mt-3 flex flex-col gap-2">
+            <div className="flex flex-wrap items-center gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                disabled={isBusy || isScanning}
+                onClick={() => void handleAutofill()}
+              >
+                {isScanning ? (
+                  <Loader2Icon className="size-4 animate-spin" />
+                ) : (
+                  <ScanTextIcon className="size-4" />
+                )}
+                {isScanning ? 'Reading card…' : 'Auto-fill details'}
+              </Button>
+
+              <label
+                htmlFor="multilingual-scan-toggle"
+                className="inline-flex cursor-pointer items-center gap-2 rounded-md border border-input bg-card px-2.5 py-1.5 text-xs font-medium text-foreground select-none transition-colors hover:bg-accent/50 has-disabled:cursor-not-allowed has-disabled:opacity-50"
+              >
+                <Switch
+                  id="multilingual-scan-toggle"
+                  checked={isMultilingual}
+                  onCheckedChange={handleMultilingualChange}
+                  disabled={isBusy || isScanning}
+                />
+                <span className="flex items-center gap-1.5">
+                  <LanguagesIcon className="size-3.5 text-muted-foreground" />
+                  <span>Multilingual (Hindi & non-Latin)</span>
+                </span>
+              </label>
+            </div>
+
             <p role="status" className="text-xs text-muted-foreground">
               {isScanning
-                ? 'Reading your image. You can keep typing.'
-                : 'Fills empty fields only. Review before saving.'}
+                ? isMultilingual
+                  ? 'Reading multilingual card with Engine 3… You can keep typing.'
+                  : 'Reading your image. You can keep typing.'
+                : isMultilingual
+                  ? 'Uses multilingual OCR (Engine 3) to recognize Hindi and non-Latin scripts.'
+                  : 'Fills empty fields only. Review before saving.'}
             </p>
           </div>
         ) : null}

@@ -81,6 +81,37 @@ test('OCR sends a file, then OpenRouter returns only validated contact fields', 
   assert.equal(calls, 2)
 })
 
+test('OCR selects Engine 3 and auto language when multilingual is enabled', async () => {
+  let requestedEngine: FormDataEntryValue | null = null
+  let requestedLanguage: FormDataEntryValue | null = null
+
+  globalThis.fetch = async (_url, options) => {
+    assert.ok(options?.body instanceof FormData)
+    requestedEngine = options.body.get('OCREngine')
+    requestedLanguage = options.body.get('language')
+    return Response.json({
+      IsErroredOnProcessing: false,
+      OCRExitCode: '1',
+      ParsedResults: [{ FileParseExitCode: 1, ParsedText: 'चौधरी' }],
+    })
+  }
+
+  // Multilingual enabled -> Engine 3 and language auto
+  const result = await ocrFromImage(image, { isMultilingual: true })
+  assert.equal(result, 'चौधरी')
+  assert.equal(requestedEngine, '3')
+  assert.equal(requestedLanguage, 'auto')
+
+  // Default / false -> Engine 2 and language eng
+  await ocrFromImage(image, { isMultilingual: false })
+  assert.equal(requestedEngine, '2')
+  assert.equal(requestedLanguage, 'eng')
+
+  await ocrFromImage(image)
+  assert.equal(requestedEngine, '2')
+  assert.equal(requestedLanguage, 'eng')
+})
+
 test('OCR rejects provider errors, blank text, and excessive text', async () => {
   for (const payload of [
     { IsErroredOnProcessing: true, OCRExitCode: 3 },
@@ -184,13 +215,13 @@ test('AI receives categories and descriptions and selects only an offered catego
         : JSON.parse(String(options?.body))
     const payload = JSON.parse(body.messages[1].content)
     assert.deepEqual(payload.categories, categories)
-    assert.equal(payload.text, 'Zivora \u2014 brand design and illustration')
+    assert.equal(payload.text, 'Zivora — brand design and illustration')
     return completion(
       JSON.stringify({ ...contact, categoryId: categories[0]!.id }),
     )
   }
   const result = await extractCardFromText(
-    'Zivora \u2014 brand design and illustration',
+    'Zivora — brand design and illustration',
     categories,
   )
   assert.equal(result.categoryId, categories[0]!.id)

@@ -2,12 +2,26 @@ import { OCR_CONFIG } from '@/constants'
 import { env } from '@/env'
 import { ocrResponseSchema, ocrTextSchema } from '@/lib/validators/ocr'
 
+export interface OcrOptions {
+  isMultilingual?: boolean
+}
+
 /** Read transient OCR text from a bounded image without persisting it. */
-export async function ocrFromImage(file: Blob): Promise<string> {
+export async function ocrFromImage(
+  file: Blob,
+  options?: OcrOptions,
+): Promise<string> {
+  const isMultilingual = options?.isMultilingual ?? false
   const body = new FormData()
   body.set('file', file, file.type === 'image/png' ? 'card.png' : 'card.jpg')
-  body.set('language', OCR_CONFIG.language)
-  body.set('OCREngine', OCR_CONFIG.engine)
+  body.set(
+    'language',
+    isMultilingual ? OCR_CONFIG.multilingualLanguage : OCR_CONFIG.language,
+  )
+  body.set(
+    'OCREngine',
+    isMultilingual ? OCR_CONFIG.multilingualEngine : OCR_CONFIG.engine,
+  )
   body.set('scale', 'true')
   body.set('detectOrientation', 'true')
   body.set('isOverlayRequired', 'false')

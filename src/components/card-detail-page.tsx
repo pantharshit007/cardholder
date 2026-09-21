@@ -28,6 +28,7 @@ import type { CardRecord } from '@/types/card'
 import { initialsFromName } from '@/utils/auth-user'
 import { categoryStripeColor } from '@/utils/category-color'
 import { formatDate } from '@/utils/format'
+import { getGoogleMapsSearchUrl } from '@/utils/maps-url'
 
 export function CardDetailPage({ card }: { card: CardRecord }) {
   const router = useRouter()
@@ -309,6 +310,25 @@ export function CardDetailPage({ card }: { card: CardRecord }) {
                     ) : (
                       <CopyIcon className="size-4 text-muted-foreground" />
                     )}
+                  </Button>
+                  <Button
+                    asChild
+                    variant="ghost"
+                    size="sm"
+                    className="size-8 shrink-0 p-0"
+                  >
+                    <a
+                      href={getGoogleMapsSearchUrl(card.location)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label="Open location in Google Maps (opens in a new tab)"
+                      title="Open in Google Maps"
+                    >
+                      <MapPinIcon
+                        aria-hidden="true"
+                        className="size-4 text-muted-foreground"
+                      />
+                    </a>
                   </Button>
                 </div>
               ) : null}

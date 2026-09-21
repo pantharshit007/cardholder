@@ -6,6 +6,7 @@ import {
   BuildingIcon,
   CalendarIcon,
   CheckIcon,
+  ClockIcon,
   CopyIcon,
   ExternalLinkIcon,
   FileTextIcon,
@@ -355,10 +356,17 @@ export function CardDetailPage({ card }: { card: CardRecord }) {
           ) : null}
 
           {/* Metadata */}
-          <div className="flex items-center gap-4 text-xs text-muted-foreground">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted-foreground">
             <span className="flex items-center gap-1.5">
               <CalendarIcon className="size-3.5" />
               Added {formatDate(card.createdAt)}
+            </span>
+            <span className="flex items-center gap-1.5">
+              <ClockIcon aria-hidden="true" className="size-3.5" />
+              Updated{' '}
+              <time dateTime={card.updatedAt}>
+                {formatDate(card.updatedAt)}
+              </time>
             </span>
           </div>
         </div>

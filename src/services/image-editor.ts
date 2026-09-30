@@ -1,7 +1,8 @@
-import { IMAGE_EDITOR_CONFIG } from '@/constants'
+import { ALLOWED_IMAGE_MIME_TYPES, IMAGE_EDITOR_CONFIG } from '@/constants'
 import type { ImageCrop, ImageTransform } from '@/types/image-editor'
 import { editedImageFileName, imageCropPixels } from '@/utils/image-editor'
 
+/** Load a local or CORS-enabled saved image for canvas editing. */
 export function loadEditableImage(source: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const image = new Image()
@@ -17,6 +18,7 @@ export function loadEditableImage(source: string): Promise<HTMLImageElement> {
   })
 }
 
+/** Encode a canvas using the configured quality and browser-supported format. */
 function canvasBlob(
   canvas: HTMLCanvasElement,
   mimeType: string,
@@ -62,6 +64,7 @@ export async function transformImage(
   return canvasBlob(canvas, IMAGE_EDITOR_CONFIG.defaultMimeType)
 }
 
+/** Export a source-resolution crop, preserving allowed formats or using WebP. */
 export async function exportEditedImage(
   source: string,
   crop: ImageCrop,
@@ -85,10 +88,12 @@ export async function exportEditedImage(
     canvas.width,
     canvas.height,
   )
-  const blob = await canvasBlob(
-    canvas,
-    originalFile?.type ?? IMAGE_EDITOR_CONFIG.defaultMimeType,
-  )
+  const allowed = ALLOWED_IMAGE_MIME_TYPES as readonly string[]
+  const mimeType =
+    originalFile && allowed.includes(originalFile.type)
+      ? originalFile.type
+      : IMAGE_EDITOR_CONFIG.fallbackExportMimeType
+  const blob = await canvasBlob(canvas, mimeType)
   return new File(
     [blob],
     editedImageFileName(

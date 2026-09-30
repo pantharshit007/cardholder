@@ -28,6 +28,7 @@ import {
 import type { ImageEditorProps, ImageTransform } from '@/types/image-editor'
 import { fullImageCrop } from '@/utils/image-editor'
 
+/** Preview reversible transforms and apply a validated crop to the card form. */
 export function CardImageEditor({
   source,
   file,
@@ -91,6 +92,7 @@ export function CardImageEditor({
     }
   }, [original, transform])
 
+  /** Reset the crop before rendering a new rotation or flip. */
   function changeTransform(next: ImageTransform) {
     setPreview(null)
     setError(null)
@@ -98,6 +100,7 @@ export function CardImageEditor({
     setTransform(next)
   }
 
+  /** Export and validate edits, keeping the dialog open if export fails. */
   async function apply() {
     if (!preview || isApplying) return
     setIsApplying(true)

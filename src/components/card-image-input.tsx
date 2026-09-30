@@ -20,6 +20,7 @@ import {
 } from '@/constants'
 import type { CardImageInputProps } from '@/types/image-editor'
 
+/** Select, paste, replace, remove, or edit a card image before upload. */
 export function CardImageInput({
   previewUrl,
   file,
@@ -42,6 +43,7 @@ export function CardImageInput({
     [],
   )
 
+  /** Read an allowed clipboard image with keyboard-paste guidance on failure. */
   async function pasteFromClipboard() {
     if (disabled || isReadingClipboard) return
     if (!('clipboard' in navigator) || !('read' in navigator.clipboard)) {

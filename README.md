@@ -117,7 +117,10 @@ or reset the current editing session. The crop handles support mouse, touch, and
 keyboard controls. Rotating or flipping resets the crop selection. **Apply changes**
 updates the local preview; **Cancel** keeps the previous image. Saved card images
 can also be edited. The selected or edited image uploads only when the card is
-saved, and the existing JPEG/PNG/WebP and 5 MB limits still apply.
+saved, and the existing JPEG/PNG/WebP and 5 MB limits still apply. New files keep
+their supported image format when edited; saved images use WebP to avoid an
+unnecessary PNG size increase. The exported filename matches the browser's
+actual output format.
 
 For a shared Tailscale preview, run the app under a process manager so it stays
 available after the terminal or agent session ends. The current preview uses

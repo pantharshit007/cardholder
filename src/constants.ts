@@ -178,6 +178,7 @@ export const IMAGE_EDITOR_CONFIG = {
   minCropSize: 1,
   exportQuality: 0.92,
   defaultMimeType: 'image/png',
+  fallbackExportMimeType: 'image/webp',
   defaultFileName: 'card-image',
   clipboardFileName: 'pasted-card',
   mimeExtensions: {

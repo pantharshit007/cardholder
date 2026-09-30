@@ -1,6 +1,7 @@
 import { IMAGE_EDITOR_CONFIG } from '@/constants'
 import type { ImageCrop, ImageRectangle } from '@/types/image-editor'
 
+/** Select the entire image using viewport-independent percentage coordinates. */
 export function fullImageCrop(): ImageCrop {
   return {
     unit: '%',
@@ -50,6 +51,7 @@ export function clipboardImage(data: DataTransfer): File | null {
   return null
 }
 
+/** Match the edited filename extension to the format actually encoded. */
 export function editedImageFileName(name: string, mimeType: string): string {
   const extensions: Record<string, string> = IMAGE_EDITOR_CONFIG.mimeExtensions
   const base =

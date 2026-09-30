@@ -104,3 +104,28 @@ per page using an indexed ID cursor, without a full user count or offset scan.
 Approval only changes email verification; it does not grant administrator access.
 Authorization reads fresh database session data so approval, verification
 revocation, and admin-role changes apply on the next server request.
+
+## Card images
+
+On the new/edit card form, choose a file, drag and drop an image, or paste a copied
+image with **Ctrl+V / ⌘V** while focused in the form. **Paste image** also reads the
+clipboard when the browser allows it; keyboard paste remains available if that
+permission is denied. Text paste in contact fields works normally.
+
+Use **Edit image** to crop freely, rotate left/right, flip horizontally/vertically,
+or reset the current editing session. The crop handles support mouse, touch, and
+keyboard controls. Rotating or flipping resets the crop selection. **Apply changes**
+updates the local preview; **Cancel** keeps the previous image. Saved card images
+can also be edited. The selected or edited image uploads only when the card is
+saved, and the existing JPEG/PNG/WebP and 5 MB limits still apply. New files keep
+their supported image format when edited; saved images use WebP to avoid an
+unnecessary PNG size increase. The exported filename matches the browser's
+actual output format.
+
+For a shared Tailscale preview, run the app under a process manager so it stays
+available after the terminal or agent session ends. The current preview uses
+the user service `cardholder-preview.service`, with automatic restart on failure.
+Check it with `systemctl --user status cardholder-preview.service` and read its
+logs with `journalctl --user -u cardholder-preview.service`. An empty HTTP 502
+from Tailscale means the proxy could not reach the app; it is separate from the
+JSON errors returned by OCR.space or AI extraction.

@@ -99,7 +99,7 @@ test('error handling preserves server status messages and handles non-JSON error
     readAutofillResponse(
       new Response('<html>Bad gateway</html>', { status: 502 }),
     ),
-    /Could not scan/,
+    /cannot reach the server/,
   )
 })
 

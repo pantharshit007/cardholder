@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { extractedCardSchema } from '@/lib/validators/ocr'
 import type { ExtractedCard } from '@/types/ocr'
+import { autofillResponseErrorMessage } from '@/utils/error'
 
 const errorSchema = z.object({ message: z.string().trim().min(1) })
 
@@ -13,7 +14,7 @@ export async function readAutofillResponse(
     throw new Error(
       error.success
         ? error.data.message
-        : 'Could not scan this card. Try again or enter the details manually.',
+        : autofillResponseErrorMessage(response.status),
     )
   }
   return extractedCardSchema.parse(await response.json())

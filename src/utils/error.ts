@@ -1,10 +1,18 @@
-import { IMAGE_UPLOAD_ERRORS } from '@/constants'
+import { AUTOFILL_ERRORS, IMAGE_UPLOAD_ERRORS } from '@/constants'
 import type {
   AutofillFailure,
   AutofillStage,
   ImageUploadStage,
 } from '@/types/error'
 import { RequestBodyTooLargeError } from '@/utils/request-body'
+
+/** Empty proxy responses describe availability, rather than image quality. */
+export function autofillResponseErrorMessage(status: number): string {
+  if (status === 401) return AUTOFILL_ERRORS.sessionExpired
+  if (status === 502 || status === 503) return AUTOFILL_ERRORS.unavailable
+  if (status === 504) return AUTOFILL_ERRORS.timedOut
+  return AUTOFILL_ERRORS.scanFailed
+}
 
 /** Describe failures without exposing provider bodies, credentials, or OCR text. */
 export function describeAutofillError(

@@ -171,6 +171,22 @@ export const IMAGE_UPLOAD_CONFIG = {
   errors: IMAGE_UPLOAD_ERRORS,
 } as const
 
+export const IMAGE_EDITOR_CONFIG = {
+  quarterTurnDegrees: 90,
+  fullTurnDegrees: 360,
+  percentScale: 100,
+  minCropSize: 1,
+  exportQuality: 0.92,
+  defaultMimeType: 'image/png',
+  defaultFileName: 'card-image',
+  clipboardFileName: 'pasted-card',
+  mimeExtensions: {
+    'image/jpeg': 'jpg',
+    'image/png': 'png',
+    'image/webp': 'webp',
+  },
+} as const
+
 /**
  * Cohesive OCR Configuration
  */
@@ -195,6 +211,15 @@ export const OCR_CONFIG = {
     resizeFactor: 0.8,
     resizeAttempts: 6,
   },
+} as const
+
+export const AUTOFILL_ERRORS = {
+  unavailable:
+    'Autofill cannot reach the server right now. Please try again shortly.',
+  timedOut: 'The autofill request timed out. Please try again.',
+  sessionExpired: 'Your session has expired. Please sign in again.',
+  scanFailed:
+    'Could not scan this card. Try again or enter the details manually.',
 } as const
 
 /**

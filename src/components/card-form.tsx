@@ -11,13 +11,13 @@ import {
   MapPinIcon,
   PhoneIcon,
   ScanTextIcon,
-  UploadCloudIcon,
   UserIcon,
-  XIcon,
 } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
 
+import { CardImageInput } from '@/components/card-image-input'
+import { clipboardImage } from '@/utils/image-editor'
 import { CardAutofillSuggestions } from '@/components/card-autofill-suggestions'
 import { autofillValue } from '@/utils/autofill-value'
 import { Button } from '@/components/ui/button'
@@ -38,10 +38,8 @@ import {
 import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
 import {
-  ALLOWED_IMAGE_MIME_TYPES,
   CARDS_PATH,
   FIELD_LIMITS,
-  MAX_IMAGE_SIZE_MEBIBYTES,
   OCR_MULTILINGUAL_STORAGE_KEY,
 } from '@/constants'
 import { createCard, discardCardUpload, updateCard } from '@/server/cards'
@@ -88,9 +86,9 @@ export function CardForm({
   const [previewUrl, setPreviewUrl] = useState<string | null>(
     card?.imageUrl ?? null,
   )
-  const [isDragging, setIsDragging] = useState(false)
+  const [isImageEditing, setIsImageEditing] = useState(false)
+  const [isReadingClipboard, setIsReadingClipboard] = useState(false)
   const [removeImage, setRemoveImage] = useState(false)
-  const fileInputRef = useRef<HTMLInputElement>(null)
   const previewObjectUrlRef = useRef<string | null>(null)
 
   const scanRef = useRef<AbortController | null>(null)
@@ -209,7 +207,7 @@ export function CardForm({
   const [emailError, setEmailError] = useState<string | undefined>()
   const [formError, setFormError] = useState<string | undefined>()
 
-  const isBusy = isUploading || isSaving
+  const isBusy = isUploading || isSaving || isReadingClipboard
 
   useEffect(
     () => () => {
@@ -249,18 +247,6 @@ export function CardForm({
     }
   }
 
-  /** Accept the first dropped image when the form is editable. */
-  function handleDrop(e: React.DragEvent<HTMLElement>) {
-    e.preventDefault()
-    setIsDragging(false)
-    if (isBusy) return
-
-    const file = e.dataTransfer.files[0]
-    if (file) {
-      handleFileSelect(file)
-    }
-  }
-
   /** Clear the preview and suggestions and mark a saved image for removal. */
   function handleRemoveImage() {
     cancelScan()
@@ -269,15 +255,12 @@ export function CardForm({
     setImageFile(null)
     setPreviewUrl(null)
     setRemoveImage(Boolean(card?.imageUrl))
-    if (fileInputRef.current) {
-      fileInputRef.current.value = ''
-    }
   }
 
-  /** Validate manual data, upload the original image, and save the card. */
+  /** Validate manual data, upload the selected or edited image, and save the card. */
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (isBusy) return
+    if (isBusy || isImageEditing) return
     cancelScan()
     setNameError(undefined)
     setEmailError(undefined)
@@ -408,83 +391,32 @@ export function CardForm({
   }
 
   return (
-    <form onSubmit={(e) => void handleSubmit(e)} className="space-y-8">
+    <form
+      onSubmit={(e) => void handleSubmit(e)}
+      onPaste={(event) => {
+        if (isBusy || isImageEditing) return
+        const file = clipboardImage(event.clipboardData)
+        if (!file) return
+        event.preventDefault()
+        handleFileSelect(file)
+      }}
+      className="space-y-8"
+    >
       {/* Image Upload Zone */}
       <div>
-        <FieldLabel
-          htmlFor="card-image-file-input"
-          className="mb-2 block font-medium cursor-pointer"
-        >
-          Card Image
-        </FieldLabel>
-        <p className="mb-3 text-xs text-muted-foreground">
-          Upload a photo or scan of the business card (JPEG, PNG, WebP up to{' '}
-          {MAX_IMAGE_SIZE_MEBIBYTES}MB).
-        </p>
-
-        {previewUrl ? (
-          <div className="relative overflow-hidden rounded-xl border border-foreground/15 bg-muted/40 shadow-xs">
-            <div className="flex max-h-72 w-full items-center justify-center overflow-hidden bg-black/5 p-4 dark:bg-white/5">
-              <img
-                src={previewUrl}
-                alt="Business card preview"
-                className="max-h-64 max-w-full rounded-md object-contain shadow-xs"
-              />
-            </div>
-            <div className="flex items-center justify-between border-t border-foreground/10 bg-card px-4 py-2.5">
-              <span className="truncate text-xs text-muted-foreground">
-                {imageFile ? imageFile.name : 'Saved card image'}
-              </span>
-              <div className="flex items-center gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  disabled={isBusy}
-                  onClick={() => fileInputRef.current?.click()}
-                >
-                  Replace
-                </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  disabled={isBusy}
-                  onClick={handleRemoveImage}
-                  className="text-destructive hover:bg-destructive/10 hover:text-destructive"
-                >
-                  <XIcon className="mr-1 size-3.5" />
-                  Remove
-                </Button>
-              </div>
-            </div>
-          </div>
-        ) : (
-          <label
-            htmlFor="card-image-file-input"
-            onDragOver={(e) => {
-              e.preventDefault()
-              setIsDragging(true)
-            }}
-            onDragLeave={() => setIsDragging(false)}
-            onDrop={handleDrop}
-            className={`flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed p-8 text-center transition-all ${
-              isDragging
-                ? 'border-primary bg-primary/5'
-                : 'border-foreground/20 hover:border-foreground/40 hover:bg-muted/30'
-            }`}
-          >
-            <div className="mb-3 flex size-12 items-center justify-center rounded-full bg-secondary text-primary">
-              <UploadCloudIcon className="size-6" />
-            </div>
-            <p className="text-sm font-medium text-foreground">
-              Click to select or drag and drop card image
-            </p>
-            <p className="mt-1 text-xs text-muted-foreground">
-              JPEG, PNG, or WebP up to {MAX_IMAGE_SIZE_MEBIBYTES}MB
-            </p>
-          </label>
-        )}
+        <CardImageInput
+          previewUrl={previewUrl}
+          file={imageFile}
+          disabled={isBusy}
+          editorOpen={isImageEditing}
+          onEditorOpenChange={(open) => {
+            if (open) cancelScan()
+            setIsImageEditing(open)
+          }}
+          onClipboardReadingChange={setIsReadingClipboard}
+          onSelect={handleFileSelect}
+          onRemove={handleRemoveImage}
+        />
 
         {imageFile ? (
           <div className="mt-3 flex flex-col gap-2">
@@ -548,20 +480,6 @@ export function CardForm({
             onApply={(field) => applySuggestions(suggestions, true, field)}
           />
         ) : null}
-
-        <input
-          id="card-image-file-input"
-          ref={fileInputRef}
-          type="file"
-          accept={ALLOWED_IMAGE_MIME_TYPES.join(',')}
-          className="sr-only"
-          disabled={isBusy}
-          onChange={(e) => {
-            const file = e.target.files?.[0]
-            if (file) handleFileSelect(file)
-            e.target.value = ''
-          }}
-        />
       </div>
 
       {/* Form Fields */}

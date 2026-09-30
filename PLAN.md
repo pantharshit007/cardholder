@@ -334,6 +334,31 @@ Each phase has: **Goal → Tasks → Deliverables → Acceptance Criteria → Re
 
 **Review Checkpoint:** Commit `feat: cards CRUD with cloudinary upload`. Pause.
 
+**Image input enhancement (explicitly requested):** New/edit forms accept copied
+images through keyboard paste or the Paste image button. Edit image provides
+freeform cropping, quarter-turn rotation, horizontal/vertical flips, and reset
+for new and saved images. Apply changes replaces the local preview and clears
+stale scan suggestions; Cancel retains the previous image. Upload still occurs
+only on card submission, with the existing format/size validation and
+authenticated, user-scoped save flow.
+
+**Verification:** Typecheck, lint, production build, and the existing unit/provider
+test suite passed. Headless Chromium checked actual image/text clipboard paste, clipboard
+button, exact exported crop/rotation/flip pixels, cancellation, mobile layout,
+keyboard cropping, reset, transparency, invalid/oversized files, and removal.
+A disposable Postgres database verified creation, saved-image editing, and
+Cloudinary persistence; the test card and uploaded images were deleted afterward.
+Configured server secrets were absent from the client build. Commit only with
+user permission.
+
+**Preview availability fix:** An empty Tailscale 502 was reproduced with no app
+listening on port 3000. The preview now runs independently under a user systemd
+service with restart on failure. Autofill distinguishes empty/non-JSON gateway
+responses from scan failures while preserving specific server/provider messages.
+A live pasted-and-cropped PNG successfully populated contact fields through
+multilingual OCR and AI extraction. Browser checks confirmed that an empty gateway
+response retains form values and the selected image for retry.
+
 ---
 
 ### Phase 6 — OCR + AI Autofill
